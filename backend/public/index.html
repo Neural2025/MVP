@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Automation System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Automation System</h1>
+            <p>Analyze code in any programming language and generate test suites using DeepSeek AI</p>
+            <p style="font-size: 0.9em; color: #7f8c8d; margin-top: 5px;">✨ Syntax errors are OK! The system will analyze and help fix any issues.</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="code-input">Code (any programming language, max 10KB):</label>
+                    <textarea
+                        id="code-input"
+                        placeholder="Enter your code here (any language, syntax errors OK - we'll help fix them!)..."
+                        rows="15"
+                        maxlength="10240"
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="code-counter">0</span> / 10,240 characters
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="purpose-input">Purpose (max 1KB):</label>
+                    <textarea
+                        id="purpose-input"
+                        placeholder="Describe what your code is supposed to do..."
+                        rows="4"
+                        maxlength="1024"
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="purpose-counter">0</span> / 1,024 characters
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="analyze-btn" class="btn btn-primary">
+                        <span class="btn-text">Analyze Code</span>
+                        <span class="btn-loading" style="display: none;">Analyzing...</span>
+                    </button>
+                    <button id="generate-tests-btn" class="btn btn-secondary">
+                        <span class="btn-text">Generate Tests</span>
+                        <span class="btn-loading" style="display: none;">Generating...</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <h3>Results</h3>
+                    <button id="clear-output" class="btn btn-small">Clear</button>
+                </div>
+                <div id="output" class="output-content">
+                    <div class="no-content">Results will appear here...</div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="status-bar">
+                <span id="status">Ready</span>
+                <span id="timestamp"></span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

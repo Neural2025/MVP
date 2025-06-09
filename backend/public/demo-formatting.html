@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatting Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Enhanced Analysis Demo</h1>
+            <p>This shows how the results look with the improved error detection and formatting</p>
+        </header>
+
+        <main style="grid-template-columns: 1fr;">
+            <div class="output-section">
+                <div class="output-header">
+                    <h3>Enhanced Analysis Results Demo</h3>
+                </div>
+                <div class="output-content">
+                    <div class="result-container">
+                        <h3>Code Analysis Results</h3>
+                        
+                        <div class="analysis-section error-detection-section">
+                            <div class="section-title">🐛 Error Detection & Fix Suggestions</div>
+                            <div class="section-content">
+                                <div class="error-item critical">
+                                    <div class="error-header">🚨 Security Error</div>
+                                    <div class="error-location">Location: <span class="line-highlight">Line 5</span></div>
+                                    <div class="error-description">Issue: Potential XSS vulnerability - using innerHTML without sanitization</div>
+                                    <div class="error-fix">
+                                        <div class="fix-label">💡 How to fix:</div>
+                                        <div class="fix-suggestion">Use textContent instead of innerHTML, or sanitize input properly before inserting</div>
+                                        <div class="fix-code-example">
+                                            <div class="fix-example-label">Example fix:</div>
+                                            <pre>// Instead of: element.innerHTML = userInput
+// Use: element.textContent = userInput
+// Or: element.innerHTML = sanitizeHtml(userInput)</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="error-item medium">
+                                    <div class="error-header">🔍 Logic Error</div>
+                                    <div class="error-location">Location: <span class="function-highlight">Function processData</span></div>
+                                    <div class="error-description">Issue: Missing input validation - function doesn't check for null/undefined parameters</div>
+                                    <div class="error-fix">
+                                        <div class="fix-label">💡 How to fix:</div>
+                                        <div class="fix-suggestion">Add proper input validation to prevent runtime errors</div>
+                                        <div class="fix-code-example">
+                                            <div class="fix-example-label">Example fix:</div>
+                                            <pre>function processData(data) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid input: data must be an object');
+  }
+  // rest of function...
+}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section security-section">
+                            <div class="section-title">🔒 Security Analysis</div>
+                            <div class="section-content">
+                                <div class="analysis-item critical">🚨 <span class="line-highlight">Line 5</span>: <span class="error-keyword">Critical</span> XSS vulnerability - using innerHTML without sanitization</div>
+                                <div class="analysis-item success">✅ No use of eval() or dangerous functions</div>
+                                <div class="analysis-item success">✅ No SQL injection vulnerabilities detected</div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section performance-section">
+                            <div class="section-title">⚡ Performance Analysis</div>
+                            <div class="section-content">
+                                <div class="analysis-item high">⚠️ <span class="line-highlight">Line 12</span>: Inefficient nested loop with O(n²) complexity - <span class="error-keyword">performance</span> bottleneck</div>
+                                <div class="analysis-item medium">💡 <span class="function-highlight">Function searchArray</span>: Consider using Map for O(1) lookup instead of linear search</div>
+                                <div class="analysis-item success">✅ No memory leaks detected</div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section optimization-section">
+                            <div class="section-title">🚀 Optimization Suggestions</div>
+                            <div class="section-content">
+                                <div class="analysis-item medium">💡 <span class="line-highlight">Line 8</span>: Add input validation for parameters to prevent runtime <span class="error-keyword">errors</span></div>
+                                <div class="analysis-item low">🔍 Consider adding JSDoc comments for better documentation</div>
+                                <div class="analysis-item medium">💡 <span class="function-highlight">Function calculateTotal</span>: Use const instead of let for immutable variables</div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section functionality-section">
+                            <div class="section-title">✅ Functionality Assessment</div>
+                            <div class="section-content">
+                                <div class="analysis-item">📋 Function correctly implements addition of two numbers</div>
+                                <div class="analysis-item">📋 Return type is appropriate for the operation</div>
+                                <div class="analysis-item">📋 Code structure is clear and readable</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section" style="margin-top: 30px;">
+                <div class="output-header">
+                    <h3>Test Generation Demo</h3>
+                </div>
+                <div class="output-content">
+                    <div class="result-container">
+                        <h3>Test Generation Results</h3>
+                        
+                        <div class="test-section">
+                            <div class="section-title">🧪 Generated Test Suite</div>
+                            <div class="test-code">
+                                <pre>describe('add function', () => {
+  test('should add two positive numbers', () => {
+    expect(add(2, 3)).toBe(5);
+  });
+  
+  test('should add negative numbers', () => {
+    expect(add(-1, -2)).toBe(-3);
+  });
+  
+  test('should handle zero', () => {
+    expect(add(0, 5)).toBe(5);
+    expect(add(5, 0)).toBe(5);
+  });
+  
+  test('should handle decimal numbers', () => {
+    expect(add(1.5, 2.5)).toBe(4);
+  });
+  
+  test('should handle edge cases', () => {
+    expect(add(Number.MAX_VALUE, 1)).toBe(Number.MAX_VALUE + 1);
+    expect(add(-0, +0)).toBe(0);
+  });
+});</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="fixes-section">
+                            <div class="section-title">🔧 Suggested Fixes</div>
+                            <div class="fix-item">
+                                <div class="fix-header">Fix #1</div>
+                                <div class="issue-description">Issue: No input validation for non-numeric values</div>
+                                <div class="fix-label">Fixed Code:</div>
+                                <div class="fix-code">
+                                    <pre>function add(a, b) {
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new Error('Both parameters must be numbers');
+  }
+  return a + b;
+}</pre>
+                                </div>
+                            </div>
+                            
+                            <div class="fix-item">
+                                <div class="fix-header">Fix #2</div>
+                                <div class="issue-description">Issue: Missing JSDoc documentation</div>
+                                <div class="fix-label">Fixed Code:</div>
+                                <div class="fix-code">
+                                    <pre>/**
+ * Adds two numbers together
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @returns {number} The sum of a and b
+ * @throws {Error} When parameters are not numbers
+ */
+function add(a, b) {
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new Error('Both parameters must be numbers');
+  }
+  return a + b;
+}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer style="margin-top: 30px; text-align: center; padding: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Enhanced Test Automation System</strong></p>
+            <p>Now with comprehensive error detection, location identification, and fix suggestions!</p>
+            <p><a href="/" style="color: #3498db; text-decoration: none;">← Back to Main Application</a></p>
+        </footer>
+    </div>
+</body>
+</html>
