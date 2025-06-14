@@ -24,8 +24,9 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
+    enum: ['developer', 'tester', 'product_manager', 'admin', 'user'], // Keep 'user' for backward compatibility
+    required: [true, 'Role is required'],
+    default: 'developer'
   },
   isActive: {
     type: Boolean,
@@ -41,13 +42,52 @@ const userSchema = new mongoose.Schema({
   testGenerationCount: {
     type: Number,
     default: 0
-  }
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  analysisHistory: [{
+    code: String,
+    purpose: String,
+    language: String,
+    results: {
+      security: [String],
+      performance: [String],
+      optimization: [String],
+      functionality: [String]
+    },
+    corrections: [String],
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  testHistory: [{
+    code: String,
+    purpose: String,
+    language: String,
+    tests: String,
+    fixes: [{
+      issue: String,
+      fixedCode: String
+    }],
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+  // Migrate old role values
+  if (this.role === 'user') {
+    this.role = 'developer'; // Default migration
+  }
+
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
 
@@ -81,6 +121,26 @@ userSchema.methods.incrementTestGenerationCount = async function() {
 // Instance method to update last login
 userSchema.methods.updateLastLogin = async function() {
   this.lastLogin = new Date();
+  return await this.save();
+};
+
+// Instance method to add analysis to history
+userSchema.methods.addAnalysisHistory = async function(analysisData) {
+  this.analysisHistory.unshift(analysisData);
+  // Keep only last 50 analyses
+  if (this.analysisHistory.length > 50) {
+    this.analysisHistory = this.analysisHistory.slice(0, 50);
+  }
+  return await this.save();
+};
+
+// Instance method to add test generation to history
+userSchema.methods.addTestHistory = async function(testData) {
+  this.testHistory.unshift(testData);
+  // Keep only last 50 test generations
+  if (this.testHistory.length > 50) {
+    this.testHistory = this.testHistory.slice(0, 50);
+  }
   return await this.save();
 };
 

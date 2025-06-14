@@ -13,7 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check if user is logged in on app start
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('user');
       }
     }
-    
+
     setIsLoading(false);
   }, []);
 
@@ -57,11 +57,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await apiLogin({ email, password });
-      
+
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
-      
+
       toast.success('Login successful!');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Login failed';
@@ -72,15 +72,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (name: string, email: string, password: string, role: string) => {
     try {
       setIsLoading(true);
-      const response = await apiSignup({ name, email, password });
-      
+      const response = await apiSignup({ name, email, password, role });
+
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
-      
+
       toast.success('Account created successfully!');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Signup failed';

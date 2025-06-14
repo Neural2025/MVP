@@ -1,17 +1,18 @@
 const User = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const emailValidationService = require('../services/emailValidationService');
 
 // Register new user
 const signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        error: 'Name, email, and password are required'
+        error: 'Name, email, password, and role are required'
       });
     }
 
@@ -19,6 +20,35 @@ const signup = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // Validate role
+    const validRoles = ['developer', 'tester', 'product_manager'];
+    if (role && !validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid role. Must be developer, tester, or product_manager'
+      });
+    }
+
+    // Default role if not provided
+    const userRole = role || 'developer';
+
+    // Validate email format first
+    if (!emailValidationService.isValidFormat(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format'
+      });
+    }
+
+    // Validate email existence (async)
+    const emailValidation = await emailValidationService.validateEmail(email);
+    if (!emailValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: emailValidation.reason || 'Invalid email address'
       });
     }
 
@@ -35,7 +65,9 @@ const signup = async (req, res) => {
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      password
+      password,
+      role: userRole,
+      emailVerified: emailValidation.isValid
     });
 
     await user.save();
@@ -123,6 +155,12 @@ const login = async (req, res) => {
         success: false,
         error: 'Invalid email or password'
       });
+    }
+
+    // Migrate old role if needed
+    if (user.role === 'user') {
+      user.role = 'developer';
+      await user.save();
     }
 
     // Generate token

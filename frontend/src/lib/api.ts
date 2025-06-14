@@ -91,7 +91,7 @@ export const login = async (data: AuthRequest): Promise<AuthResponse> => {
   return response.data;
 };
 
-export const signup = async (data: AuthRequest & { name: string }): Promise<AuthResponse> => {
+export const signup = async (data: AuthRequest & { name: string; role: string }): Promise<AuthResponse> => {
   const response = await api.post('/api/auth/signup', data);
   return response.data;
 };

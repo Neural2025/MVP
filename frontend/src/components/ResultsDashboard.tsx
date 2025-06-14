@@ -4,19 +4,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { 
-  Shield, 
-  Zap, 
-  Target, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Shield,
+  Zap,
+  Target,
+  CheckCircle,
+  AlertTriangle,
   XCircle,
   ChevronDown,
   ChevronRight,
   Copy,
   TestTube,
   Bug,
-  Wrench
+  Wrench,
+  Github,
+  Upload,
+  Code2,
+  Info
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +29,13 @@ interface AnalysisResults {
   performance: string[];
   optimization: string[];
   functionality: string[];
+  corrections?: string[];
+  language?: string;
+  sourceInfo?: {
+    type: string;
+    repository?: any;
+    summary?: any;
+  };
 }
 
 interface TestResults {
@@ -102,7 +113,7 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
 
   if (!analysisResults && !testResults) {
     return (
-      <Card className="h-fit">
+      <Card className="h-fit animate-in slide-in-from-right-5 duration-500">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TestTube className="h-5 w-5 text-muted-foreground" />
@@ -114,8 +125,8 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Run code analysis to see results</p>
+            <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
+            <p className="animate-in fade-in duration-1000 delay-500">Run code analysis to see results</p>
           </div>
         </CardContent>
       </Card>
@@ -123,37 +134,71 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
   }
 
   return (
-    <Card className="h-fit">
+    <Card className="h-fit animate-in slide-in-from-right-5 duration-500">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TestTube className="h-5 w-5 text-primary" />
-          Analysis Results
-        </CardTitle>
-        <CardDescription>
-          AI-powered insights and recommendations
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TestTube className="h-5 w-5 text-primary" />
+              Analysis Results
+            </CardTitle>
+            <CardDescription>
+              AI-powered insights and recommendations
+            </CardDescription>
+          </div>
+          {analysisResults?.language && (
+            <Badge variant="outline" className="animate-in fade-in duration-300">
+              {analysisResults.language}
+            </Badge>
+          )}
+        </div>
+        {analysisResults?.sourceInfo && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground animate-in slide-in-from-top-2 duration-300">
+            {analysisResults.sourceInfo.type === 'github' && (
+              <>
+                <Github className="h-3 w-3" />
+                <span>From GitHub Repository</span>
+              </>
+            )}
+            {analysisResults.sourceInfo.type === 'upload' && (
+              <>
+                <Upload className="h-3 w-3" />
+                <span>From Uploaded Files</span>
+              </>
+            )}
+            {analysisResults.sourceInfo.type === 'manual' && (
+              <>
+                <Code2 className="h-3 w-3" />
+                <span>Manual Input</span>
+              </>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="analysis" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analysis" disabled={!analysisResults}>
-              Code Analysis
+              Analysis
+            </TabsTrigger>
+            <TabsTrigger value="corrections" disabled={!analysisResults?.corrections}>
+              Corrections
             </TabsTrigger>
             <TabsTrigger value="tests" disabled={!testResults}>
-              Test Generation
+              Tests
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="analysis" className="space-y-4">
+          <TabsContent value="analysis" className="space-y-4 animate-in slide-in-from-bottom-3 duration-300">
             {analysisResults && (
               <div className="space-y-4">
                 {/* Security Issues */}
-                <Collapsible 
-                  open={openSections.security} 
+                <Collapsible
+                  open={openSections.security}
                   onOpenChange={() => toggleSection('security')}
                 >
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                    <Button variant="ghost" className="w-full justify-between p-0 h-auto transition-all duration-200 hover:scale-[1.02]">
                       <div className="flex items-center gap-2">
                         <Badge variant={getIssueVariant('security')} className="gap-1">
                           {getIssueIcon('security')}
@@ -163,14 +208,14 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
                       {openSections.security ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
+                  <CollapsibleContent className="mt-3 animate-in slide-in-from-top-2 duration-200">
                     {renderIssueList(analysisResults.security, 'security')}
                   </CollapsibleContent>
                 </Collapsible>
 
                 {/* Performance Issues */}
-                <Collapsible 
-                  open={openSections.performance} 
+                <Collapsible
+                  open={openSections.performance}
                   onOpenChange={() => toggleSection('performance')}
                 >
                   <CollapsibleTrigger asChild>
@@ -190,8 +235,8 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
                 </Collapsible>
 
                 {/* Optimization Issues */}
-                <Collapsible 
-                  open={openSections.optimization} 
+                <Collapsible
+                  open={openSections.optimization}
                   onOpenChange={() => toggleSection('optimization')}
                 >
                   <CollapsibleTrigger asChild>
@@ -211,8 +256,8 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
                 </Collapsible>
 
                 {/* Functionality Issues */}
-                <Collapsible 
-                  open={openSections.functionality} 
+                <Collapsible
+                  open={openSections.functionality}
                   onOpenChange={() => toggleSection('functionality')}
                 >
                   <CollapsibleTrigger asChild>
@@ -234,7 +279,59 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
             )}
           </TabsContent>
 
-          <TabsContent value="tests" className="space-y-4">
+          <TabsContent value="corrections" className="space-y-4 animate-in slide-in-from-bottom-3 duration-300">
+            {analysisResults?.corrections && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Code Corrections & Improvements</h3>
+                  <Badge variant="secondary">{analysisResults.corrections.length}</Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {analysisResults.corrections.map((correction, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 bg-muted/30 hover:bg-muted/50 transition-all duration-200 hover:scale-[1.01] animate-in slide-in-from-left-2"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mt-0.5">
+                          <span className="text-xs font-medium text-primary">{index + 1}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm leading-relaxed">{correction}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(correction)}
+                          className="flex-shrink-0"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">How to Apply Corrections</span>
+                  </div>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• Review each correction carefully in the context of your code</li>
+                    <li>• Test changes in a development environment first</li>
+                    <li>• Consider the impact on existing functionality</li>
+                    <li>• Use version control to track your improvements</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="tests" className="space-y-4 animate-in slide-in-from-bottom-3 duration-300">
             {testResults && (
               <div className="space-y-4">
                 {/* Generated Tests */}

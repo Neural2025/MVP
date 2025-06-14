@@ -201,13 +201,13 @@ Return your response as a JSON object with this exact structure:
 
   parseTestResponse(content) {
     try {
-      // Extract JSON from the response
+
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
 
-      // Fallback
+
       return {
         tests: '// Test generation completed but response format was unexpected',
         fixes: []
@@ -222,7 +222,7 @@ Return your response as a JSON object with this exact structure:
   }
 
   detectProgrammingLanguage(code) {
-    // Simple language detection based on common patterns
+
     const patterns = {
       'JavaScript': [
         /function\s+\w+\s*\(/,
@@ -327,6 +327,72 @@ Return your response as a JSON object with this exact structure:
     };
 
     return frameworks[language] || 'appropriate testing framework';
+  }
+
+  async generateCorrections(code, analysisResult) {
+    try {
+      const allIssues = [
+        ...(analysisResult.security || []),
+        ...(analysisResult.performance || []),
+        ...(analysisResult.optimization || []),
+        ...(analysisResult.functionality || [])
+      ];
+
+      if (allIssues.length === 0) {
+        return ['No issues found - code looks good!'];
+      }
+
+      const prompt = `
+Based on the following code analysis results, provide specific corrections and improvements:
+
+**Code:**
+\`\`\`
+${code}
+\`\`\`
+
+**Identified Issues:**
+${allIssues.map((issue, index) => `${index + 1}. ${issue}`).join('\n')}
+
+Please provide specific, actionable corrections for each issue. Focus on:
+- Exact line numbers or code sections to modify
+- Specific code changes to implement
+- Best practices to follow
+- Security improvements
+- Performance optimizations
+
+Format as an array of correction strings.
+`;
+
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert code reviewer. Provide specific, actionable corrections for identified issues.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.2
+      });
+
+      const content = response.choices[0].message.content;
+
+      // Try to parse as JSON array, fallback to splitting by lines
+      try {
+        const parsed = JSON.parse(content);
+        return Array.isArray(parsed) ? parsed : [content];
+      } catch (parseError) {
+        // Split by lines and filter out empty lines
+        return content.split('\n').filter(line => line.trim().length > 0);
+      }
+    } catch (error) {
+      logger.error('Corrections generation failed:', error);
+      return ['Unable to generate corrections at this time'];
+    }
   }
 }
 

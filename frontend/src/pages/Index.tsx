@@ -29,12 +29,7 @@ const Index = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const handleAnalyze = async () => {
-    if (!code.trim()) {
-      toast.error("Please enter some code to analyze");
-      return;
-    }
-
+  const handleAnalyze = async (data: any) => {
     if (!purpose.trim()) {
       toast.error("Please describe the purpose of your code");
       return;
@@ -42,23 +37,45 @@ const Index = () => {
 
     setIsAnalyzing(true);
     try {
-      const results = await analyzeCode({ code, purpose });
+      let results;
+      if (data.files) {
+        // Handle file upload
+        const formData = new FormData();
+        formData.append('purpose', purpose);
+        data.files.forEach((file: File) => {
+          formData.append('files', file);
+        });
+
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Analysis failed');
+        }
+
+        const responseData = await response.json();
+        results = responseData.data;
+      } else {
+        // Handle manual code or GitHub URL
+        results = await analyzeCode({ ...data, purpose });
+      }
+
       setAnalysisResults(results);
       toast.success("Code analysis completed!");
     } catch (error: any) {
       console.error("Analysis error:", error);
-      toast.error(error.response?.data?.error || "Analysis failed");
+      toast.error(error.response?.data?.error || error.message || "Analysis failed");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleGenerateTests = async () => {
-    if (!code.trim()) {
-      toast.error("Please enter some code to generate tests for");
-      return;
-    }
-
+  const handleGenerateTests = async (data: any) => {
     if (!purpose.trim()) {
       toast.error("Please describe the purpose of your code");
       return;
@@ -66,12 +83,39 @@ const Index = () => {
 
     setIsGeneratingTests(true);
     try {
-      const results = await generateTests({ code, purpose });
+      let results;
+      if (data.files) {
+        // Handle file upload
+        const formData = new FormData();
+        formData.append('purpose', purpose);
+        data.files.forEach((file: File) => {
+          formData.append('files', file);
+        });
+
+        const response = await fetch('/api/generate-tests', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Test generation failed');
+        }
+
+        const responseData = await response.json();
+        results = responseData.data;
+      } else {
+        // Handle manual code or GitHub URL
+        results = await generateTests({ ...data, purpose });
+      }
+
       setTestResults(results);
       toast.success("Test generation completed!");
     } catch (error: any) {
       console.error("Test generation error:", error);
-      toast.error(error.response?.data?.error || "Test generation failed");
+      toast.error(error.response?.data?.error || error.message || "Test generation failed");
     } finally {
       setIsGeneratingTests(false);
     }

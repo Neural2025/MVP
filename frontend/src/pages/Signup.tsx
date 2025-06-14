@@ -4,7 +4,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Code, UserPlus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Code, UserPlus, Mail, Shield, CheckCircle, AlertCircle } from "lucide-react";
 
 const Signup = () => {
   const { signup, isAuthenticated, isLoading } = useAuth();
@@ -12,24 +14,85 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailValidation, setEmailValidation] = useState<{
+    isValid: boolean;
+    isChecking: boolean;
+    message: string;
+  }>({ isValid: false, isChecking: false, message: "" });
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
+  const validateEmail = async (emailValue: string) => {
+    if (!emailValue || emailValue.length < 5) {
+      setEmailValidation({ isValid: false, isChecking: false, message: "" });
+      return;
+    }
+
+    setEmailValidation({ isValid: false, isChecking: true, message: "Checking email..." });
+
+    try {
+      // Basic format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailValue)) {
+        setEmailValidation({ isValid: false, isChecking: false, message: "Invalid email format" });
+        return;
+      }
+
+      // Simulate email validation (you can implement actual validation)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // For demo purposes, reject some common invalid domains
+      const domain = emailValue.split('@')[1]?.toLowerCase();
+      const invalidDomains = ['test.com', 'fake.com', 'invalid.com'];
+
+      if (invalidDomains.includes(domain)) {
+        setEmailValidation({ isValid: false, isChecking: false, message: "Email domain does not exist" });
+      } else {
+        setEmailValidation({ isValid: true, isChecking: false, message: "Email is valid" });
+      }
+    } catch (error) {
+      setEmailValidation({ isValid: false, isChecking: false, message: "Unable to validate email" });
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const emailValue = e.target.value;
+    setEmail(emailValue);
+
+    // Debounce email validation
+    const timeoutId = setTimeout(() => {
+      validateEmail(emailValue);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       alert("Passwords don't match");
       return;
     }
 
+    if (!role) {
+      alert("Please select your role");
+      return;
+    }
+
+    if (!emailValidation.isValid) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      await signup(name, email, password);
+      await signup(name, email, password, role);
     } catch (error) {
       // Error is handled by the auth context
     } finally {
@@ -83,18 +146,78 @@ const Signup = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
+                <label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
                 </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11"
-                />
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your professional email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    required
+                    className="h-11 pr-10"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {emailValidation.isChecking && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!emailValidation.isChecking && email && emailValidation.isValid && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                    {!emailValidation.isChecking && email && !emailValidation.isValid && emailValidation.message && (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
+                </div>
+                {emailValidation.message && (
+                  <p className={`text-xs ${emailValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                    {emailValidation.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="role" className="text-sm font-medium flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Your Role
+                </label>
+                <Select value={role} onValueChange={setRole} required>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select your professional role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="developer">
+                      <div className="flex items-center gap-2">
+                        <Code className="h-4 w-4" />
+                        <div>
+                          <div className="font-medium">Developer</div>
+                          <div className="text-xs text-muted-foreground">Software Engineer, Programmer</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="tester">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <div>
+                          <div className="font-medium">Tester</div>
+                          <div className="text-xs text-muted-foreground">QA Engineer, Test Analyst</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="product_manager">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        <div>
+                          <div className="font-medium">Product Manager</div>
+                          <div className="text-xs text-muted-foreground">PM, Product Owner</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium">
