@@ -76,7 +76,17 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.json({
+    message: 'AI QA Assistant API',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth/*',
+      analysis: '/api/analyze',
+      tests: '/api/generate-tests',
+      apiTest: '/api/test-api-key',
+      health: '/health'
+    }
+  });
 });
 
 

@@ -1,6 +1,72 @@
 const sanitizeHtml = require('sanitize-html');
 
 class Validator {
+  // Supported programming languages - Enhanced list
+  static SUPPORTED_LANGUAGES = [
+    'javascript', 'python', 'java', 'cpp', 'csharp',
+    'php', 'ruby', 'go', 'typescript', 'kotlin',
+    'swift', 'rust', 'scala', 'dart', 'r',
+    'c', 'perl', 'lua', 'haskell', 'erlang',
+    'elixir', 'clojure', 'f#', 'vb.net', 'objective-c',
+    'shell', 'bash', 'powershell', 'sql', 'html',
+    'css', 'sass', 'less', 'xml', 'json',
+    'yaml', 'toml', 'dockerfile', 'makefile', 'cmake'
+  ];
+
+  // Language file extensions mapping
+  static LANGUAGE_EXTENSIONS = {
+    'javascript': ['.js', '.jsx', '.mjs', '.cjs'],
+    'typescript': ['.ts', '.tsx'],
+    'python': ['.py', '.pyw', '.pyx'],
+    'java': ['.java'],
+    'cpp': ['.cpp', '.cc', '.cxx', '.c++', '.hpp', '.h++'],
+    'c': ['.c', '.h'],
+    'csharp': ['.cs'],
+    'php': ['.php', '.phtml'],
+    'ruby': ['.rb', '.rbw'],
+    'go': ['.go'],
+    'rust': ['.rs'],
+    'swift': ['.swift'],
+    'kotlin': ['.kt', '.kts'],
+    'scala': ['.scala'],
+    'dart': ['.dart'],
+    'r': ['.r', '.R'],
+    'perl': ['.pl', '.pm'],
+    'lua': ['.lua'],
+    'haskell': ['.hs', '.lhs'],
+    'erlang': ['.erl', '.hrl'],
+    'elixir': ['.ex', '.exs'],
+    'clojure': ['.clj', '.cljs', '.cljc'],
+    'f#': ['.fs', '.fsx', '.fsi'],
+    'vb.net': ['.vb'],
+    'objective-c': ['.m', '.mm'],
+    'shell': ['.sh'],
+    'bash': ['.bash'],
+    'powershell': ['.ps1', '.psm1'],
+    'sql': ['.sql'],
+    'html': ['.html', '.htm'],
+    'css': ['.css'],
+    'sass': ['.sass', '.scss'],
+    'less': ['.less'],
+    'xml': ['.xml'],
+    'json': ['.json'],
+    'yaml': ['.yaml', '.yml'],
+    'toml': ['.toml'],
+    'dockerfile': ['Dockerfile', '.dockerfile'],
+    'makefile': ['Makefile', 'makefile', '.mk'],
+    'cmake': ['.cmake', 'CMakeLists.txt']
+  };
+
+  // Detect language from file extension
+  static detectLanguage(filename) {
+    const ext = filename.toLowerCase();
+    for (const [language, extensions] of Object.entries(this.LANGUAGE_EXTENSIONS)) {
+      if (extensions.some(extension => ext.endsWith(extension.toLowerCase()))) {
+        return language;
+      }
+    }
+    return 'text'; // Default fallback
+  }
   static validateCode(code) {
     if (!code || typeof code !== 'string') {
       throw new Error('Code is required and must be a string');

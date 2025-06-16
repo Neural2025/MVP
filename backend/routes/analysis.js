@@ -20,6 +20,9 @@ router.post('/analyze', upload.array('files', 10), analysisController.analyzeCod
 // POST /api/generate-tests - Generate test cases and fixes
 router.post('/generate-tests', upload.array('files', 10), analysisController.generateTests);
 
+// POST /api/test-api-key - Test DeepSeek API key validity
+router.post('/test-api-key', analysisController.testApiKey);
+
 // History routes (require authentication)
 router.get('/history/analysis', authenticateToken, analysisController.getAnalysisHistory);
 router.get('/history/tests', authenticateToken, analysisController.getTestHistory);

@@ -10,6 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['animejs']
+  },
+  define: {
+    global: 'globalThis',
+  },
   server: {
     proxy: {
       '/api': {

@@ -4,6 +4,7 @@ const logger = require('../utils/logger');
 const User = require('../models/User');
 const githubService = require('../services/githubService');
 const fileUploadService = require('../services/fileUploadService');
+const axios = require('axios');
 
 class AnalysisController {
   async analyzeCode(req, res, next) {
@@ -267,6 +268,142 @@ class AnalysisController {
     } catch (error) {
       logger.error('Get test history error:', error);
       next(error);
+    }
+  }
+
+  // Test API Key - Enhanced with multi-API support
+  async testApiKey(req, res, next) {
+    try {
+      const { apiKey, apiProvider = 'deepseek' } = req.body;
+
+      if (!apiKey) {
+        return res.status(400).json({
+          status: 'error',
+          error: 'API key is required'
+        });
+      }
+
+      let testResponse;
+      let apiUrl;
+      let model;
+      let headers;
+
+      // Configure based on API provider
+      switch (apiProvider.toLowerCase()) {
+        case 'openai':
+          apiUrl = 'https://api.openai.com/v1/chat/completions';
+          model = 'gpt-3.5-turbo';
+          headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          };
+          break;
+
+        case 'deepseek':
+          apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+          model = 'deepseek-coder';
+          headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          };
+          break;
+
+        case 'huggingface':
+          apiUrl = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+          headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          };
+          break;
+
+        case 'anthropic':
+          apiUrl = 'https://api.anthropic.com/v1/messages';
+          model = 'claude-3-haiku-20240307';
+          headers = {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01'
+          };
+          break;
+
+        case 'google':
+          apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+          headers = {
+            'Content-Type': 'application/json'
+          };
+          break;
+
+        default:
+          return res.status(400).json({
+            status: 'error',
+            error: 'Unsupported API provider. Supported: openai, deepseek, huggingface, anthropic, google'
+          });
+      }
+
+      // Make test request based on provider
+      if (apiProvider === 'huggingface') {
+        testResponse = await axios.post(apiUrl, {
+          inputs: "Test connection"
+        }, { headers, timeout: 10000 });
+      } else if (apiProvider === 'anthropic') {
+        testResponse = await axios.post(apiUrl, {
+          model: model,
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'Test connection' }]
+        }, { headers, timeout: 10000 });
+      } else if (apiProvider === 'google') {
+        testResponse = await axios.post(apiUrl, {
+          contents: [{ parts: [{ text: 'Test connection' }] }]
+        }, { headers, timeout: 10000 });
+      } else {
+        // OpenAI and DeepSeek format
+        testResponse = await axios.post(apiUrl, {
+          model: model,
+          messages: [{ role: 'user', content: 'Test connection. Respond with "API key is valid".' }],
+          max_tokens: 10,
+          temperature: 0
+        }, { headers, timeout: 10000 });
+      }
+
+      if (testResponse.data) {
+        logger.info(`${apiProvider} API key test successful`);
+        res.json({
+          status: 'success',
+          message: `${apiProvider} API key is valid and working`,
+          data: {
+            status: 'valid',
+            provider: apiProvider,
+            model: model || 'default',
+            timestamp: new Date().toISOString()
+          }
+        });
+      } else {
+        throw new Error('Invalid response from API');
+      }
+
+    } catch (error) {
+      logger.error(`${apiProvider || 'Unknown'} API key test failed:`, error.message);
+
+      let errorMessage = 'API key test failed';
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key';
+      } else if (error.response?.status === 429) {
+        errorMessage = 'API rate limit exceeded';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'API access forbidden';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'API request timeout';
+      }
+
+      res.status(400).json({
+        status: 'error',
+        error: errorMessage,
+        data: {
+          status: 'invalid',
+          provider: apiProvider || 'unknown',
+          timestamp: new Date().toISOString()
+        }
+      });
     }
   }
 }
