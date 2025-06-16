@@ -21,12 +21,13 @@ const connectDB = async () => {
     await mongoose.connect(mongoURI);
     logger.info('MongoDB connected successfully');
   } catch (error) {
-    logger.error('MongoDB connection failed:', error);
-    process.exit(1);
+    logger.error('MongoDB connection failed:', error.message);
+    logger.warn('Server will continue without database functionality');
+    // Don't exit, continue without MongoDB
   }
 };
 
-
+// Connect to MongoDB (non-blocking)
 connectDB();
 
 

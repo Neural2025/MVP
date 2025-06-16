@@ -23,6 +23,9 @@ router.post('/generate-tests', upload.array('files', 10), analysisController.gen
 // POST /api/test-api-key - Test DeepSeek API key validity
 router.post('/test-api-key', analysisController.testApiKey);
 
+// POST /api/github/fetch - Fetch GitHub repository
+router.post('/github/fetch', analysisController.fetchGithubRepo);
+
 // History routes (require authentication)
 router.get('/history/analysis', authenticateToken, analysisController.getAnalysisHistory);
 router.get('/history/tests', authenticateToken, analysisController.getTestHistory);

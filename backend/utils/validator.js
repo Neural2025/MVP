@@ -1,16 +1,66 @@
 const sanitizeHtml = require('sanitize-html');
 
 class Validator {
-  // Supported programming languages - Enhanced list
+  // Supported programming languages - COMPREHENSIVE LIST
   static SUPPORTED_LANGUAGES = [
-    'javascript', 'python', 'java', 'cpp', 'csharp',
-    'php', 'ruby', 'go', 'typescript', 'kotlin',
-    'swift', 'rust', 'scala', 'dart', 'r',
-    'c', 'perl', 'lua', 'haskell', 'erlang',
-    'elixir', 'clojure', 'f#', 'vb.net', 'objective-c',
-    'shell', 'bash', 'powershell', 'sql', 'html',
-    'css', 'sass', 'less', 'xml', 'json',
-    'yaml', 'toml', 'dockerfile', 'makefile', 'cmake'
+    // Popular Languages
+    'javascript', 'typescript', 'python', 'java', 'cpp', 'c', 'csharp',
+    'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'scala', 'dart', 'r',
+
+    // Functional Languages
+    'haskell', 'erlang', 'elixir', 'clojure', 'fsharp', 'ocaml', 'lisp', 'scheme',
+
+    // System Languages
+    'assembly', 'cobol', 'fortran', 'pascal', 'delphi', 'ada', 'modula',
+
+    // Scripting Languages
+    'perl', 'lua', 'tcl', 'awk', 'sed', 'shell', 'bash', 'zsh', 'fish', 'powershell',
+
+    // Web Technologies
+    'html', 'css', 'sass', 'scss', 'less', 'stylus', 'xml', 'xslt', 'svg',
+
+    // Data Languages
+    'sql', 'nosql', 'json', 'yaml', 'toml', 'ini', 'csv', 'tsv',
+
+    // Scientific/Mathematical
+    'matlab', 'octave', 'mathematica', 'maple', 'maxima', 'scilab',
+
+    // Modern Languages
+    'julia', 'nim', 'crystal', 'zig', 'v', 'odin', 'carbon', 'mojo',
+
+    // Blockchain
+    'solidity', 'vyper', 'cairo', 'move', 'clarity',
+
+    // Mobile Development
+    'objective-c', 'flutter', 'xamarin',
+
+    // Game Development
+    'gdscript', 'unrealscript', 'hlsl', 'glsl',
+
+    // Legacy Languages
+    'basic', 'visualbasic', 'vbnet', 'qbasic', 'turbo-pascal',
+
+    // Esoteric Languages
+    'brainfuck', 'whitespace', 'malbolge', 'befunge',
+
+    // Configuration/Build
+    'dockerfile', 'makefile', 'cmake', 'gradle', 'maven', 'ant', 'scons',
+    'ninja', 'bazel', 'buck', 'pants',
+
+    // Template Languages
+    'jinja2', 'handlebars', 'mustache', 'twig', 'smarty',
+
+    // Query Languages
+    'graphql', 'sparql', 'cypher', 'gremlin',
+
+    // Markup Languages
+    'markdown', 'restructuredtext', 'asciidoc', 'textile',
+
+    // Domain Specific
+    'verilog', 'vhdl', 'systemverilog', 'spice', 'netlist',
+
+    // Others
+    'prolog', 'smalltalk', 'forth', 'postscript', 'tex', 'latex'
   ];
 
   // Language file extensions mapping

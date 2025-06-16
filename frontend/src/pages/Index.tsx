@@ -121,6 +121,133 @@ const Index = () => {
     }
   };
 
+  // Handle code analysis
+  const handleAnalyze = async () => {
+    if (!code.trim() && !githubUrl.trim()) {
+      toast.error('Please provide code to analyze');
+      return;
+    }
+
+    if (!purpose.trim()) {
+      toast.error('Please describe what your code is supposed to do');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setLoadingProgress(0);
+    setLoadingStatus('Initializing analysis...');
+
+    try {
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => Math.min(prev + 10, 90));
+      }, 500);
+
+      setLoadingStatus('Sending code to AI for analysis...');
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code.trim(),
+          purpose: purpose.trim(),
+          githubUrl: githubUrl.trim(),
+          language: selectedLanguage
+        }),
+      });
+
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+      setLoadingStatus('Analysis complete!');
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        setAnalysisResults(result.data);
+        setShowResults(true);
+        toast.success('🎉 Code analysis completed successfully!');
+      } else {
+        toast.error(`❌ Analysis failed: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error('❌ Failed to analyze code. Please try again.');
+      console.error('Analysis error:', error);
+    } finally {
+      setIsAnalyzing(false);
+      setLoadingProgress(0);
+      setLoadingStatus('');
+    }
+  };
+
+  // Handle file/folder upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    let combinedCode = '';
+    let fileCount = 0;
+    const totalFiles = Array.from(files).filter(file =>
+      file.type.includes('text') ||
+      file.name.match(/\.(js|jsx|ts|tsx|py|java|cpp|c|cs|php|rb|go|rs|swift|kt|scala|dart|r|pl|lua|hs|erl|ex|clj|fs|vb|m|sh|sql|html|css|xml|json|yaml|toml)$/)
+    );
+
+    if (totalFiles.length === 0) {
+      toast.error('No supported code files found in the selected folder');
+      return;
+    }
+
+    toast.info(`📁 Processing ${totalFiles.length} files...`);
+
+    totalFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        combinedCode += `\n\n// ===== File: ${file.name} =====\n${content}`;
+        fileCount++;
+
+        if (fileCount === totalFiles.length) {
+          setCode(combinedCode);
+          toast.success(`🎉 Successfully loaded ${fileCount} files from folder!`);
+        }
+      };
+      reader.readAsText(file);
+    });
+  };
+
+  // Handle GitHub repository fetch
+  const handleGithubFetch = async () => {
+    if (!githubUrl.trim()) {
+      toast.error('Please enter a GitHub repository URL');
+      return;
+    }
+
+    toast.info('🔄 Fetching repository...');
+
+    try {
+      const response = await fetch('/api/github/fetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ githubUrl: githubUrl.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        setCode(result.data.combinedCode);
+        toast.success(`🎉 Successfully fetched repository! Found ${result.data.fileCount} files.`);
+      } else {
+        toast.error(`❌ Failed to fetch repository: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error('❌ Failed to fetch repository. Please check the URL and try again.');
+      console.error('GitHub fetch error:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
@@ -142,7 +269,7 @@ const Index = () => {
   // Role Selection Screen
   if (currentStep === 'role-selection') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
         <div className="max-w-6xl w-full">
           {/* Header */}
           <div className="text-center mb-12">
@@ -276,13 +403,59 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="javascript">JavaScript</SelectItem>
+                  <SelectItem value="typescript">TypeScript</SelectItem>
                   <SelectItem value="python">Python</SelectItem>
                   <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="csharp">C#</SelectItem>
                   <SelectItem value="cpp">C++</SelectItem>
+                  <SelectItem value="c">C</SelectItem>
+                  <SelectItem value="csharp">C#</SelectItem>
                   <SelectItem value="php">PHP</SelectItem>
                   <SelectItem value="ruby">Ruby</SelectItem>
                   <SelectItem value="go">Go</SelectItem>
+                  <SelectItem value="rust">Rust</SelectItem>
+                  <SelectItem value="swift">Swift</SelectItem>
+                  <SelectItem value="kotlin">Kotlin</SelectItem>
+                  <SelectItem value="scala">Scala</SelectItem>
+                  <SelectItem value="dart">Dart</SelectItem>
+                  <SelectItem value="r">R</SelectItem>
+                  <SelectItem value="perl">Perl</SelectItem>
+                  <SelectItem value="lua">Lua</SelectItem>
+                  <SelectItem value="haskell">Haskell</SelectItem>
+                  <SelectItem value="erlang">Erlang</SelectItem>
+                  <SelectItem value="elixir">Elixir</SelectItem>
+                  <SelectItem value="clojure">Clojure</SelectItem>
+                  <SelectItem value="fsharp">F#</SelectItem>
+                  <SelectItem value="vbnet">VB.NET</SelectItem>
+                  <SelectItem value="objective-c">Objective-C</SelectItem>
+                  <SelectItem value="shell">Shell</SelectItem>
+                  <SelectItem value="bash">Bash</SelectItem>
+                  <SelectItem value="powershell">PowerShell</SelectItem>
+                  <SelectItem value="sql">SQL</SelectItem>
+                  <SelectItem value="html">HTML</SelectItem>
+                  <SelectItem value="css">CSS</SelectItem>
+                  <SelectItem value="sass">SASS/SCSS</SelectItem>
+                  <SelectItem value="less">LESS</SelectItem>
+                  <SelectItem value="xml">XML</SelectItem>
+                  <SelectItem value="json">JSON</SelectItem>
+                  <SelectItem value="yaml">YAML</SelectItem>
+                  <SelectItem value="toml">TOML</SelectItem>
+                  <SelectItem value="dockerfile">Dockerfile</SelectItem>
+                  <SelectItem value="makefile">Makefile</SelectItem>
+                  <SelectItem value="cmake">CMake</SelectItem>
+                  <SelectItem value="assembly">Assembly</SelectItem>
+                  <SelectItem value="cobol">COBOL</SelectItem>
+                  <SelectItem value="fortran">Fortran</SelectItem>
+                  <SelectItem value="pascal">Pascal</SelectItem>
+                  <SelectItem value="delphi">Delphi</SelectItem>
+                  <SelectItem value="matlab">MATLAB</SelectItem>
+                  <SelectItem value="octave">Octave</SelectItem>
+                  <SelectItem value="julia">Julia</SelectItem>
+                  <SelectItem value="nim">Nim</SelectItem>
+                  <SelectItem value="crystal">Crystal</SelectItem>
+                  <SelectItem value="zig">Zig</SelectItem>
+                  <SelectItem value="v">V</SelectItem>
+                  <SelectItem value="solidity">Solidity</SelectItem>
+                  <SelectItem value="vyper">Vyper</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -301,7 +474,7 @@ const Index = () => {
 
               {/* User Menu */}
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 text-white">
                   <span className="text-2xl">
                     {selectedRole === 'developer' ? '👨‍💻' : selectedRole === 'tester' ? '🧪' : '📊'}
                   </span>
@@ -327,7 +500,7 @@ const Index = () => {
           <Card className="shadow-xl border-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
-                <Code className="h-6 w-6 text-indigo-600" />
+                <Code className="h-6 w-6 text-emerald-600" />
                 Code Input
               </CardTitle>
               <CardDescription>
@@ -377,19 +550,37 @@ const Index = () => {
                         className="pl-10"
                       />
                     </div>
-                    <Button variant="outline">
+                    <Button
+                      variant="outline"
+                      onClick={handleGithubFetch}
+                      disabled={!githubUrl.trim()}
+                      className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                    >
                       Fetch Repository
                     </Button>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="upload" className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
-                    <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-lg font-medium mb-2">Drop your .zip file here</p>
-                    <p className="text-muted-foreground mb-4">or click to browse</p>
-                    <Button variant="outline">
-                      Choose File
+                  <div className="border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-lg p-8 text-center hover:border-emerald-400 transition-colors">
+                    <Upload className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+                    <p className="text-lg font-medium mb-2">Drop your project folder here</p>
+                    <p className="text-muted-foreground mb-4">or click to browse and select a folder</p>
+                    <input
+                      type="file"
+                      multiple
+                      webkitdirectory=""
+                      directory=""
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="folder-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('folder-upload')?.click()}
+                      className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                    >
+                      Choose Folder
                     </Button>
                   </div>
                 </TabsContent>
@@ -454,9 +645,9 @@ const Index = () => {
               {/* Analyze Button */}
               <div className="flex justify-center pt-4">
                 <Button
-                  onClick={() => {/* handleAnalyze */}}
+                  onClick={handleAnalyze}
                   disabled={isAnalyzing || (!code.trim() && !githubUrl.trim()) || !purpose.trim()}
-                  className="px-8 py-3 text-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="px-8 py-3 text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {isAnalyzing ? (
                     <>
