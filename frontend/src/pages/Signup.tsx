@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Code, UserPlus, Mail, Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, Code, UserPlus, Mail, Shield, CheckCircle, AlertCircle, ArrowLeft, User, Lock } from "lucide-react";
 
 const Signup = () => {
   const { signup, isAuthenticated, isLoading } = useAuth();
@@ -16,6 +16,14 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPageLoaded(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
   const [emailValidation, setEmailValidation] = useState<{
     isValid: boolean;
     isChecking: boolean;
@@ -101,8 +109,26 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-indigo-500/10 rounded-full animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-24 h-24 bg-purple-500/10 rounded-full animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-10 w-16 h-16 bg-pink-500/10 rounded-full animate-float"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-20 h-20 bg-cyan-500/10 rounded-full animate-float-delayed"></div>
+        <div className="absolute top-1/3 right-1/4 w-28 h-28 bg-yellow-500/10 rounded-full animate-float"></div>
+      </div>
+
+      {/* Back to Home Button */}
+      <Link
+        to="/"
+        className={`absolute top-6 left-6 flex items-center gap-2 text-white/80 hover:text-white transition-all duration-300 hover:scale-105 ${isPageLoaded ? 'animate-slide-in-left' : 'opacity-0'}`}
+      >
+        <ArrowLeft className="h-5 w-5" />
+        <span>Back to Home</span>
+      </Link>
+
+      <div className={`w-full max-w-md space-y-8 ${isPageLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/components/ThemeProvider";
 import {
   LogOut,
   User,
@@ -13,7 +14,9 @@ import {
   Shield,
   Zap,
   Moon,
-  Sun
+  Sun,
+  Code,
+  Bug
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,10 +28,10 @@ import {
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -66,8 +69,7 @@ const Navbar = () => {
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   const toggleMenu = () => {
@@ -87,59 +89,67 @@ const Navbar = () => {
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/api-testing", label: "API Testing", icon: TestTube },
+    { href: "/test-suites", label: "Test Suites", icon: Code },
     { href: "/dashboard", label: "Dashboard", icon: Shield },
-    { href: "/pricing", label: "Pricing", icon: Zap },
   ];
 
   const isHomePage = location.pathname === '/';
 
   return (
     <>
-      <nav className={`navbar fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <nav className={`navbar fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled || !isHomePage
-          ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-gray-200 dark:border-slate-700 shadow-lg'
-          : 'bg-transparent'
+          ? 'bg-black/95 backdrop-blur-xl border-b border-purple-500/20 shadow-2xl shadow-purple-500/10'
+          : 'bg-black/80 backdrop-blur-lg'
       }`}>
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link to="/" className="nav-item flex items-center space-x-3 group">
+            <Link to="/" className="nav-item flex items-center space-x-3 group min-w-0 flex-shrink-0">
               <div className="relative">
-                <Brain className="h-8 w-8 text-purple-600 group-hover:text-purple-700 transition-colors duration-300" />
-                <div className="absolute inset-0 bg-purple-600 rounded-full blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-purple-500 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-all duration-500 animate-pulse"></div>
+                <Brain className="h-7 w-7 lg:h-8 lg:w-8 text-purple-400 group-hover:text-purple-300 transition-all duration-300 relative z-10 animate-float" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-gradient hidden sm:block">
                 AI QA Assistant
+              </span>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-gradient sm:hidden">
+                AIQA
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 flex-1 justify-center max-w-2xl mx-8">
               {navLinks.map((link, index) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="nav-item flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300 group"
+                  className={`nav-item flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-xl transition-all duration-300 group relative overflow-hidden text-sm xl:text-base ${
+                    location.pathname === link.href
+                      ? 'text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/25'
+                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
                 >
-                  <link.icon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="font-medium">{link.label}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <link.icon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
+                  <span className="font-medium relative z-10 whitespace-nowrap">{link.label}</span>
                 </Link>
               ))}
             </div>
 
             {/* Right Side */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="nav-item rounded-full p-2 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-300"
+                className="nav-item rounded-full p-1.5 lg:p-2 hover:bg-primary/10 transition-all duration-300 hover:scale-110 hidden sm:flex"
               >
-                {isDarkMode ? (
-                  <Sun className="h-4 w-4 text-yellow-500" />
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 text-accent animate-color-shift" />
                 ) : (
-                  <Moon className="h-4 w-4 text-purple-600" />
+                  <Moon className="h-4 w-4 text-primary animate-color-shift" />
                 )}
               </Button>
 
@@ -166,17 +176,21 @@ const Navbar = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="hidden md:flex items-center space-x-3">
+                <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
                   <Link to="/login">
                     <Button
                       variant="ghost"
-                      className="nav-item hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-300"
+                      size="sm"
+                      className="nav-item hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-300 text-xs lg:text-sm px-2 lg:px-3"
                     >
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup">
-                    <Button className="nav-item bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <Button
+                      size="sm"
+                      className="nav-item bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs lg:text-sm px-2 lg:px-3"
+                    >
                       Get Started
                     </Button>
                   </Link>

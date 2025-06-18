@@ -15,7 +15,12 @@ const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-    if (!token) {
+    if (!token || token === 'null' || token === 'undefined' || token.length < 10) {
+      logger.warn('Invalid token format', {
+        token: token ? token.substring(0, 10) + '...' : 'null',
+        ip: req.ip,
+        path: req.path
+      });
       return res.status(401).json({
         success: false,
         error: 'Access token is required'
@@ -24,7 +29,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Get user from database
     const user = await User.findById(decoded.userId);
     if (!user || !user.isActive) {
@@ -39,14 +44,14 @@ const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     logger.error('Authentication error:', error);
-    
+
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
         error: 'Invalid token'
       });
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -74,7 +79,7 @@ const optionalAuth = async (req, res, next) => {
         req.user = user;
       }
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication

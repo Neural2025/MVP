@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import useStatsTracking from "@/hooks/useStatsTracking";
+import { triggerDashboardRefresh } from "@/utils/dashboardRefresh";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +40,7 @@ import ResultsDashboard from "@/components/ResultsDashboard";
 
 const Index = () => {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
+  const { trackCodeAnalysis, trackTestGeneration, trackBugReport } = useStatsTracking();
 
   // App state
   const [currentStep, setCurrentStep] = useState('role-selection');
@@ -65,6 +68,10 @@ const Index = () => {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [testResults, setTestResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
+
+  // Test execution states
+  const [isRunningTests, setIsRunningTests] = useState(false);
+  const [testRole, setTestRole] = useState('developer');
 
   // Initialize role from user data
   useEffect(() => {
@@ -167,8 +174,18 @@ const Index = () => {
       if (result.status === 'success') {
         setAnalysisResults(result.data);
         setShowResults(true);
-        toast.success('🎉 Code analysis completed successfully!');
+
+        // Track successful analysis
+        trackCodeAnalysis(code.trim(), selectedLanguage, true);
+
+        // Trigger dashboard refresh
+        triggerDashboardRefresh();
+
+        console.log('Analysis results set:', result.data);
+        toast.success('🎉 Code analysis completed successfully! Test panel should now be visible.');
       } else {
+        // Track failed analysis
+        trackCodeAnalysis(code.trim(), selectedLanguage, false);
         toast.error(`❌ Analysis failed: ${result.error}`);
       }
     } catch (error) {
@@ -245,6 +262,68 @@ const Index = () => {
     } catch (error) {
       toast.error('❌ Failed to fetch repository. Please check the URL and try again.');
       console.error('GitHub fetch error:', error);
+    }
+  };
+
+  // Handle test execution
+  const handleRunTests = async () => {
+    if (!code.trim() && !githubUrl.trim()) {
+      toast.error('Please provide code to test');
+      return;
+    }
+
+    setIsRunningTests(true);
+    setLoadingProgress(0);
+    setLoadingStatus('Executing tests...');
+
+    try {
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => Math.min(prev + 15, 90));
+      }, 300);
+
+      setLoadingStatus('Running test suites...');
+
+      const response = await fetch('/api/execute-tests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code.trim(),
+          purpose: purpose.trim(),
+          githubUrl: githubUrl.trim(),
+          language: selectedLanguage,
+          role: testRole
+        }),
+      });
+
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+      setLoadingStatus('Tests completed!');
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        setTestResults(result.data);
+
+        // Track test execution
+        trackTestGeneration();
+
+        // Trigger dashboard refresh
+        triggerDashboardRefresh();
+
+        const passRate = Math.round((result.data.summary.passed / result.data.summary.totalTests) * 100);
+        toast.success(`🧪 Tests executed! ${result.data.summary.passed}/${result.data.summary.totalTests} passed (${passRate}%)`);
+      } else {
+        toast.error(`❌ Test execution failed: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error('❌ Failed to execute tests. Please try again.');
+      console.error('Test execution error:', error);
+    } finally {
+      setIsRunningTests(false);
+      setLoadingProgress(0);
+      setLoadingStatus('');
     }
   };
 
@@ -642,25 +721,30 @@ const Index = () => {
                 )}
               </div>
 
-              {/* Analyze Button */}
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing || (!code.trim() && !githubUrl.trim()) || !purpose.trim()}
-                  className="px-8 py-3 text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      Analyzing with DeepSeek AI...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="h-5 w-5 mr-2" />
-                      Analyze with DeepSeek AI
-                    </>
-                  )}
-                </Button>
+              {/* Action Buttons */}
+              <div className="space-y-4 pt-4">
+                {/* Analyze Button */}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || (!code.trim() && !githubUrl.trim()) || !purpose.trim()}
+                    className="px-8 py-3 text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Analyzing with DeepSeek AI...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="h-5 w-5 mr-2" />
+                        Analyze with DeepSeek AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+
               </div>
             </CardContent>
           </Card>
@@ -669,30 +753,133 @@ const Index = () => {
         {/* Results Section */}
         {showResults && (
           <div className="space-y-6">
+            {/* Analysis Results */}
             <ResultsDashboard
               analysisResults={analysisResults}
               testResults={testResults}
             />
+
+            {/* Test Execution Panel - RIGHT AFTER ANALYSIS RESULTS */}
+            <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-4 border-emerald-400 dark:border-emerald-400 shadow-2xl animate-pulse">
+              <CardHeader className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50">
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <TestTube className="h-8 w-8 text-emerald-600 animate-bounce" />
+                  🧪 EXECUTE TEST SUITES - READY!
+                </CardTitle>
+                <CardDescription className="text-emerald-700 dark:text-emerald-300 font-bold text-lg">
+                  ✅ Code analyzed! Now run comprehensive tests to find bugs and issues
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-4 gap-4">
+                  {/* Test Role Selection */}
+                  <div className="md:col-span-3">
+                    <label className="text-sm font-medium mb-2 block">Choose Test Type</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={testRole === 'developer' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTestRole('developer')}
+                        className="flex-1"
+                      >
+                        👨‍💻 Developer Tests
+                      </Button>
+                      <Button
+                        variant={testRole === 'tester' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTestRole('tester')}
+                        className="flex-1"
+                      >
+                        🧪 Tester Tests
+                      </Button>
+                      <Button
+                        variant={testRole === 'product_manager' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setTestRole('product_manager')}
+                        className="flex-1"
+                      >
+                        📊 Product Manager Tests
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Run Tests Button */}
+                  <div className="md:col-span-1 flex items-end">
+                    <Button
+                      onClick={handleRunTests}
+                      disabled={isRunningTests || (!code.trim() && !githubUrl.trim())}
+                      className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-lg py-3"
+                    >
+                      {isRunningTests ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <TestTube className="h-5 w-5 mr-2" />
+                          Execute Tests
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Test Results Summary */}
+                {testResults && testResults.summary && (
+                  <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border">
+                    <h4 className="font-medium text-sm mb-3">Latest Test Results</h4>
+                    <div className="grid grid-cols-4 gap-3 text-center">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
+                        <div className="font-bold text-blue-600">{testResults.summary.totalTests}</div>
+                        <div className="text-blue-600 text-xs">Total</div>
+                      </div>
+                      <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded">
+                        <div className="font-bold text-green-600">{testResults.summary.passed}</div>
+                        <div className="text-green-600 text-xs">Passed</div>
+                      </div>
+                      <div className="p-2 bg-red-50 dark:bg-red-950/30 rounded">
+                        <div className="font-bold text-red-600">{testResults.summary.failed}</div>
+                        <div className="text-red-600 text-xs">Failed</div>
+                      </div>
+                      <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded">
+                        <div className="font-bold text-purple-600">{testResults.summary.passRate}%</div>
+                        <div className="text-purple-600 text-xs">Pass Rate</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
 
       {/* Loading Overlay */}
-      {(isAnalyzing || isGeneratingTests) && (
+      {(isAnalyzing || isGeneratingTests || isRunningTests) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <Card className="w-96 shadow-2xl">
             <CardContent className="p-8 text-center">
               <div className="relative mb-6">
-                <Brain className="h-16 w-16 text-indigo-600 animate-pulse mx-auto" />
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-xl opacity-30 animate-ping"></div>
+                {isRunningTests ? (
+                  <TestTube className="h-16 w-16 text-emerald-600 animate-pulse mx-auto" />
+                ) : (
+                  <Brain className="h-16 w-16 text-indigo-600 animate-pulse mx-auto" />
+                )}
+                <div className={`absolute inset-0 ${
+                  isRunningTests ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-indigo-400 to-purple-400'
+                } rounded-full blur-xl opacity-30 animate-ping`}></div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {isAnalyzing ? 'Analyzing with DeepSeek AI...' : 'Generating Tests...'}
+                {isAnalyzing ? 'Analyzing with DeepSeek AI...' :
+                 isRunningTests ? 'Executing Test Suites...' : 'Generating Tests...'}
               </h3>
               <p className="text-muted-foreground mb-4">{loadingStatus || 'Processing your code...'}</p>
               <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    isRunningTests ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-indigo-600 to-purple-600'
+                  }`}
                   style={{ width: `${loadingProgress}%` }}
                 ></div>
               </div>

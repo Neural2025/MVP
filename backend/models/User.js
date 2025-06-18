@@ -67,12 +67,49 @@ const userSchema = new mongoose.Schema({
     code: String,
     purpose: String,
     language: String,
-    tests: String,
+    role: String,
+    tests: mongoose.Schema.Types.Mixed, // Can be string or object for role-based tests
     fixes: [{
       issue: String,
       fixedCode: String
     }],
     timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  bugReports: [{
+    id: String,
+    title: String,
+    description: String,
+    severity: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium'
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'urgent'],
+      default: 'medium'
+    },
+    status: {
+      type: String,
+      enum: ['open', 'in-progress', 'resolved', 'closed'],
+      default: 'open'
+    },
+    stepsToReproduce: [String],
+    expectedBehavior: String,
+    actualBehavior: String,
+    environment: mongoose.Schema.Types.Mixed,
+    code: String,
+    language: String,
+    aiAnalysis: mongoose.Schema.Types.Mixed,
+    createdBy: String,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    updatedAt: {
       type: Date,
       default: Date.now
     }
@@ -140,6 +177,16 @@ userSchema.methods.addTestHistory = async function(testData) {
   // Keep only last 50 test generations
   if (this.testHistory.length > 50) {
     this.testHistory = this.testHistory.slice(0, 50);
+  }
+  return await this.save();
+};
+
+// Instance method to add bug report
+userSchema.methods.addBugReport = async function(bugData) {
+  this.bugReports.unshift(bugData);
+  // Keep only last 100 bug reports
+  if (this.bugReports.length > 100) {
+    this.bugReports = this.bugReports.slice(0, 100);
   }
   return await this.save();
 };

@@ -1,0 +1,688 @@
+/* Custom Animations for AI QA Assistant */
+
+/* Loading and Fade In Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(-2deg);
+  }
+}
+
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-25px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+}
+
+/* Gradient Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Pulse Glow Animation */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.8);
+  }
+}
+
+/* Scale and Bounce */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Rotation Animations */
+@keyframes rotateIn {
+  0% {
+    transform: rotate(-180deg) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Color Shift Animation */
+@keyframes colorShift {
+  0% { color: #a855f7; }
+  25% { color: #ec4899; }
+  50% { color: #06b6d4; }
+  75% { color: #10b981; }
+  100% { color: #a855f7; }
+}
+
+/* Utility Classes */
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.8s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.8s ease-out;
+}
+
+.animate-slide-in-top {
+  animation: slideInFromTop 0.8s ease-out;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInFromBottom 0.8s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.8s ease-out;
+}
+
+.animate-rotate-in {
+  animation: rotateIn 0.8s ease-out;
+}
+
+.animate-color-shift {
+  animation: colorShift 3s ease-in-out infinite;
+}
+
+/* Scroll Animation Classes */
+.animate-on-scroll {
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+  transform: translateY(50px) scale(0.95);
+}
+
+.animate-on-scroll.animate-in {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+/* Dynamic Scroll Animations */
+@keyframes slideInFromBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes flipIn {
+  0% {
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+  }
+}
+
+/* Futuristic Animations */
+@keyframes hologramEffect {
+  0%, 100% {
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    opacity: 0.8;
+    filter: hue-rotate(90deg);
+  }
+  50% {
+    opacity: 0.9;
+    filter: hue-rotate(180deg);
+  }
+  75% {
+    opacity: 0.7;
+    filter: hue-rotate(270deg);
+  }
+}
+
+@keyframes dataStream {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes neonGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+@keyframes matrixRain {
+  0% {
+    transform: translateY(-100vh);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes cyberpunkPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px rgba(0, 255, 255, 0.5),
+      0 0 10px rgba(0, 255, 255, 0.3),
+      0 0 15px rgba(0, 255, 255, 0.2),
+      inset 0 0 5px rgba(0, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(255, 0, 255, 0.7),
+      0 0 20px rgba(255, 0, 255, 0.5),
+      0 0 30px rgba(255, 0, 255, 0.3),
+      inset 0 0 10px rgba(255, 0, 255, 0.2);
+  }
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+  transform: scale(1.02);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  border: 4px solid rgba(168, 85, 247, 0.3);
+  border-top: 4px solid #a855f7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Particle Animation */
+.particle {
+  animation: particleFloat 8s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.2;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-10px);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-20px) translateX(5px);
+    opacity: 0.4;
+  }
+}
+
+/* Button Animations */
+.btn-animate {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-animate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-animate:hover::before {
+  left: 100%;
+}
+
+/* Form Animations */
+.form-slide-in {
+  animation: slideInFromBottom 0.6s ease-out;
+}
+
+.input-focus {
+  transition: all 0.3s ease;
+}
+
+.input-focus:focus {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+/* Futuristic Utility Classes */
+.animate-hologram {
+  animation: hologramEffect 3s ease-in-out infinite;
+}
+
+.animate-data-stream {
+  background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 255, 0.1) 50%, transparent 70%);
+  background-size: 200% 200%;
+  animation: dataStream 2s linear infinite;
+}
+
+.animate-neon-glow {
+  animation: neonGlow 2s ease-in-out infinite;
+}
+
+.animate-matrix-rain {
+  animation: matrixRain 3s linear infinite;
+}
+
+.animate-cyberpunk-pulse {
+  animation: cyberpunkPulse 2s ease-in-out infinite;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.6s ease-out;
+}
+
+.animate-flip-in {
+  animation: flipIn 0.8s ease-out;
+}
+
+/* Dynamic Scroll Classes */
+.scroll-slide-up {
+  animation: slideInFromBottom 0.8s ease-out;
+}
+
+.scroll-slide-down {
+  animation: slideInFromTop 0.8s ease-out;
+}
+
+.scroll-slide-left {
+  animation: slideInFromLeft 0.8s ease-out;
+}
+
+.scroll-slide-right {
+  animation: slideInFromRight 0.8s ease-out;
+}
+
+/* Interactive Hover Effects */
+.hover-cyber {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.hover-cyber:hover::before {
+  left: 100%;
+}
+
+.hover-cyber:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+  0%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+.animate-glitch {
+  animation: glitch 0.3s ease-in-out infinite;
+}
+
+/* Particle System */
+.particle-system {
+  position: relative;
+  overflow: hidden;
+}
+
+.particle-system::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(0, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255, 0, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 0, 0.3), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: particleFloat 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Responsive Animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-on-scroll,
+  .animate-float,
+  .animate-float-delayed,
+  .animate-gradient,
+  .animate-pulse-glow,
+  .animate-hologram,
+  .animate-data-stream,
+  .animate-neon-glow,
+  .animate-matrix-rain,
+  .animate-cyberpunk-pulse {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Animation Classes for Simple Scroll Animation */
+.animate-slide-up {
+  animation: slideInFromBottom 0.8s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideInFromTop 0.8s ease-out forwards;
+}
+
+.animate-slide-left {
+  animation: slideInFromLeft 0.8s ease-out forwards;
+}
+
+.animate-slide-right {
+  animation: slideInFromRight 0.8s ease-out forwards;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.6s ease-out forwards;
+}
+
+.animate-zoom-out {
+  animation: zoomOut 0.6s ease-out forwards;
+}
+
+.animate-fade {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-flip-x {
+  animation: flipInX 0.8s ease-out forwards;
+}
+
+.animate-flip-y {
+  animation: flipInY 0.8s ease-out forwards;
+}
+
+/* Additional animations */
+@keyframes zoomOut {
+  0% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes flipInX {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes flipInY {
+  0% {
+    opacity: 0;
+    transform: rotateY(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg);
+  }
+}
+
+/* Performance Optimizations */
+.animate-on-scroll,
+.stat-card,
+.chart-card,
+.report-card,
+.feature-card,
+.stat-item,
+.hero-element {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

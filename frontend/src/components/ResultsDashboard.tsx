@@ -39,11 +39,55 @@ interface AnalysisResults {
 }
 
 interface TestResults {
-  tests: string;
-  fixes: Array<{
+  tests?: string;
+  fixes?: Array<{
     issue: string;
     fixedCode: string;
   }>;
+  // New test execution format
+  metadata?: {
+    language: string;
+    role: string;
+    codeLength: number;
+    purpose: string;
+    executedAt: string;
+    executedBy: string;
+  };
+  summary?: {
+    totalTests: number;
+    passed: number;
+    failed: number;
+    errors: number;
+    passRate: number;
+    coverage: number;
+    executionTime: number;
+    status: string;
+  };
+  testCases?: Array<{
+    name: string;
+    type: string;
+    status: string;
+    message: string;
+    executionTime: number;
+    details?: any;
+    error?: string;
+  }>;
+  recommendations?: Array<{
+    type: string;
+    message: string;
+    priority: string;
+  }>;
+  codeQuality?: {
+    metrics: {
+      complexity: number;
+      maintainability: number;
+      reliability: number;
+      testability: number;
+      overall: number;
+    };
+    grade: string;
+    description: string;
+  };
 }
 
 interface ResultsDashboardProps {
@@ -334,28 +378,169 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
           <TabsContent value="tests" className="space-y-4 animate-in slide-in-from-bottom-3 duration-300">
             {testResults && (
               <div className="space-y-4">
-                {/* Generated Tests */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <TestTube className="h-4 w-4" />
-                      Generated Test Suite
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(testResults.tests)}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy
-                    </Button>
+                {/* Test Execution Results */}
+                {testResults.summary && (
+                  <>
+                    {/* Test Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{testResults.summary.totalTests}</div>
+                        <div className="text-sm text-blue-600">Total Tests</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{testResults.summary.passed}</div>
+                        <div className="text-sm text-green-600">Passed</div>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">{testResults.summary.failed}</div>
+                        <div className="text-sm text-red-600">Failed</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{testResults.summary.passRate}%</div>
+                        <div className="text-sm text-purple-600">Pass Rate</div>
+                      </div>
+                    </div>
+
+                    {/* Test Cases */}
+                    {testResults.testCases && testResults.testCases.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <TestTube className="h-4 w-4" />
+                          Test Cases ({testResults.testCases.length})
+                        </h4>
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {testResults.testCases.map((test, index) => (
+                            <div key={index} className={`p-3 rounded-lg border ${
+                              test.status === 'PASSED' || test.status === 'passed' ? 'bg-green-50 dark:bg-green-950/30 border-green-200' :
+                              test.status === 'FAILED' || test.status === 'failed' ? 'bg-red-50 dark:bg-red-950/30 border-red-200' :
+                              'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200'
+                            }`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-medium text-sm">{test.name}</h5>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={
+                                    test.status === 'PASSED' || test.status === 'passed' ? 'default' :
+                                    test.status === 'FAILED' || test.status === 'failed' ? 'destructive' :
+                                    'secondary'
+                                  }>
+                                    {test.status.toUpperCase()}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">{test.executionTime}ms</span>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">{test.message}</p>
+                              {test.type && (
+                                <Badge variant="outline" className="text-xs">
+                                  {test.type}
+                                </Badge>
+                              )}
+                              {test.error && (
+                                <div className="mt-2 p-2 bg-red-100 dark:bg-red-950/50 border border-red-200 rounded text-sm text-red-700 dark:text-red-300">
+                                  <strong>Error:</strong> {test.error}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recommendations */}
+                    {testResults.recommendations && testResults.recommendations.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          Recommendations
+                        </h4>
+                        <div className="space-y-2">
+                          {testResults.recommendations.map((rec, index) => (
+                            <div key={index} className={`p-3 rounded-lg ${
+                              rec.type === 'error' ? 'bg-red-50 dark:bg-red-950/30 border border-red-200' :
+                              rec.type === 'warning' ? 'bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200' :
+                              rec.type === 'success' ? 'bg-green-50 dark:bg-green-950/30 border border-green-200' :
+                              'bg-blue-50 dark:bg-blue-950/30 border border-blue-200'
+                            }`}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant={
+                                  rec.priority === 'high' ? 'destructive' :
+                                  rec.priority === 'medium' ? 'default' :
+                                  'secondary'
+                                }>
+                                  {rec.priority?.toUpperCase()}
+                                </Badge>
+                              </div>
+                              <p className="text-sm">{rec.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Code Quality */}
+                    {testResults.codeQuality && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Code Quality Assessment
+                        </h4>
+                        <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg">
+                          <div className={`text-4xl font-bold mb-2 ${
+                            testResults.codeQuality.grade === 'A' ? 'text-green-600' :
+                            testResults.codeQuality.grade === 'B' ? 'text-blue-600' :
+                            testResults.codeQuality.grade === 'C' ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {testResults.codeQuality.grade}
+                          </div>
+                          <p className="text-muted-foreground">{testResults.codeQuality.description}</p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="text-center p-3 bg-muted/50 rounded">
+                            <div className="font-semibold">{testResults.codeQuality.metrics?.complexity || 0}</div>
+                            <div className="text-sm text-muted-foreground">Complexity</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/50 rounded">
+                            <div className="font-semibold">{testResults.codeQuality.metrics?.maintainability || 0}</div>
+                            <div className="text-sm text-muted-foreground">Maintainability</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/50 rounded">
+                            <div className="font-semibold">{testResults.codeQuality.metrics?.reliability || 0}</div>
+                            <div className="text-sm text-muted-foreground">Reliability</div>
+                          </div>
+                          <div className="text-center p-3 bg-muted/50 rounded">
+                            <div className="font-semibold">{testResults.codeQuality.metrics?.testability || 0}</div>
+                            <div className="text-sm text-muted-foreground">Testability</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Legacy Test Results (for backward compatibility) */}
+                {testResults.tests && !testResults.summary && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <TestTube className="h-4 w-4" />
+                        Generated Test Suite
+                      </h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(testResults.tests!)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    <div className="bg-muted rounded-lg p-4">
+                      <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
+                        {testResults.tests}
+                      </pre>
+                    </div>
                   </div>
-                  <div className="bg-muted rounded-lg p-4">
-                    <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
-                      {testResults.tests}
-                    </pre>
-                  </div>
-                </div>
+                )}
 
                 {/* Code Fixes */}
                 {testResults.fixes && testResults.fixes.length > 0 && (
