@@ -12,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  
 
   useEffect(() => {
     const timer = setTimeout(() => {

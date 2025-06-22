@@ -12,7 +12,6 @@ import {
   Home,
   TestTube,
   Shield,
-  Zap,
   Moon,
   Sun,
   Code,
@@ -27,6 +26,10 @@ import {
 // import * as anime from 'animejs'; // Temporarily disabled
 
 const Navbar = () => {
+  // Debug: Print user on every render
+  const debugUser = useAuth().user;
+  console.log('[Navbar] Render user:', debugUser);
+
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -86,12 +89,47 @@ const Navbar = () => {
     // }
   };
 
-  const navLinks = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/api-testing", label: "API Testing", icon: TestTube },
-    { href: "/test-suites", label: "Test Suites", icon: Code },
-    { href: "/dashboard", label: "Dashboard", icon: Shield },
-  ];
+  // Robust role-based menu links
+  console.log('Navbar user:', user);
+  let navLinks: Array<{ href: string; label: string; icon: any }> = [];
+  if (user && user.role) {
+    const role = user.role.trim().toLowerCase();
+    // Debug: Print role
+    console.log('[Navbar] User role:', role);
+    // Debug: Print full user object
+    console.log('[Navbar] Full user object:', user);
+    if (['dev','developer'].includes(role)) {
+      navLinks = [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/code-analysis", label: "Code Analysis", icon: Code },
+        { href: "/bug-reports", label: "Bug Reporting", icon: Bug },
+      ];
+    } else if (['tester', 'test', 'qa'].includes(role)) {
+      navLinks = [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/test-suites", label: "Test Suites", icon: TestTube },
+        { href: "/bug-reports", label: "Bug Reporting", icon: Bug },
+      ];
+    } else if ([
+      'po', 'product_owner', 'productowner', 'product manager', 'productmanager', 'product owner', 'pm', 'owner', 'manager', 'product_manager'
+    ].includes(role)) {
+      navLinks = [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/bug-reports", label: "Bug Reporting", icon: Bug },
+        { href: "/dashboard", label: "Dashboard", icon: Shield },
+      ];
+    } else {
+      // Default for unauthenticated or unknown role
+      navLinks = [
+        { href: "/", label: "Home", icon: Home },
+      ];
+    }
+  } else {
+    // Default for unauthenticated or unknown role
+    navLinks = [
+      { href: "/", label: "Home", icon: Home },
+    ];
+  }
 
   const isHomePage = location.pathname === '/';
 
@@ -120,7 +158,7 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 flex-1 justify-center max-w-2xl mx-8">
-              {navLinks.map((link, index) => (
+              {navLinks.map(link => ( 
                 <Link
                   key={link.href}
                   to={link.href}

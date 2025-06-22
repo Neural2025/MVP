@@ -22,7 +22,14 @@ const ApiKeyTester = () => {
   const [apiProvider, setApiProvider] = useState('deepseek');
   const [isTestingApiKey, setIsTestingApiKey] = useState(false);
   const [apiKeyStatus, setApiKeyStatus] = useState('');
-  const [testResult, setTestResult] = useState(null);
+  interface ApiKeyTestResult {
+  provider: string;
+  model?: string;
+  timestamp: number;
+  // Add any other properties you expect from result.data
+}
+
+const [testResult, setTestResult] = useState<ApiKeyTestResult | null>(null);
 
   const apiProviders = [
     { value: 'openai', label: 'OpenAI', icon: Brain, color: 'text-green-600' },

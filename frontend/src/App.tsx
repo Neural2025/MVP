@@ -11,8 +11,9 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import ApiTesting from "./pages/ApiTesting";
+
 import TestSuites from "./pages/TestSuites";
+import TestSuiteRunner from "./pages/TestSuiteRunner";
 import BugReports from "./pages/BugReports";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -31,9 +32,9 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/analysis" element={<Index />} />
-                  <Route path="/api-testing" element={<ApiTesting />} />
-                  <Route path="/test-suites" element={<TestSuites />} />
+                  <Route path="/code-analysis" element={<Index />} />
+                                    <Route path="/test-suites" element={<TestSuites />} />
+                  <Route path="/test-suites/:suiteType" element={<TestSuiteRunner />} />
                   <Route path="/bug-reports" element={<BugReports />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />

@@ -5,94 +5,136 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   Code,
   TestTube,
-  Shield,
-  Zap,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  BarChart3,
   Activity,
-  Users,
-  Target,
   Bug,
   Plus,
   Download,
-  FileText,
   Brain,
-  Sparkles,
   Database,
   Globe,
-  Cpu,
-  Eye,
-  Star,
   ArrowUp,
-  ArrowDown
+  Target,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
-const Dashboard = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const [stats, setStats] = useState({
+// Define interfaces for types
+interface User {
+  name: string;
+  role: string;
+}
+
+interface AuthContext {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+}
+
+interface Stats {
+  linesAnalyzed: number;
+  languagesUsed: number;
+  apisSupported: number;
+  accuracyRate: number;
+  totalAnalyses: number;
+  totalTests: number;
+  totalBugReports: number;
+}
+
+interface BugReport {
+  id?: string;
+  title?: string;
+  description?: string;
+  severity?: string;
+  status?: string;
+  createdAt?: string;
+  language?: string;
+  [key: string]: any; // Allow additional properties
+}
+
+interface TestResult {
+  id?: string;
+  purpose?: string;
+  language?: string;
+  timestamp?: string;
+  tests?: string | object;
+}
+
+interface Activity {
+  id: string;
+  type: string;
+  description: string;
+  time: string;
+  icon: LucideIcon; // Use LucideIcon type
+}
+
+interface AnalysisHistoryItem {
+  id?: string;
+  language?: string;
+  timestamp?: string;
+}
+
+interface TestHistoryItem {
+  id?: string;
+  language?: string;
+  timestamp?: string;
+}
+
+const Dashboard: React.FC = () => {
+  const { isAuthenticated, isLoading, user } = useAuth() as AuthContext;
+
+  // Only allow PO (Product Owner/Manager)
+  const allowedRoles = [
+    'po', 'product_owner', 'product owner', 'productowner', 'product manager', 'productmanager', 'pm', 'owner', 'manager', 'product_manager'
+  ];
+  if (!user || !allowedRoles.includes(user.role?.toLowerCase())) {
+    return <Navigate to="/" replace />;
+  }
+  const [stats, setStats] = useState<Stats>({
     linesAnalyzed: 0,
     languagesUsed: 0,
     apisSupported: 5,
-    accuracyRate: 0
+    accuracyRate: 0,
+    totalAnalyses: 0,
+    totalTests: 0,
+    totalBugReports: 0,
   });
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
-  const [visibleElements, setVisibleElements] = useState(new Set());
-  const [bugReports, setBugReports] = useState([]);
-  const [testResults, setTestResults] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
-
-  // Animation refs
-  const statsRef = useRef(null);
-  const chartsRef = useRef(null);
-  const reportsRef = useRef(null);
+  const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
+  const [bugReports, setBugReports] = useState<BugReport[]>([]);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
+  const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Loading animation
-    const timer = setTimeout(() => {
-      setIsPageLoaded(true);
-    }, 500);
+    const timer = setTimeout(() => setIsPageLoaded(true), 500);
 
-    // Intersection Observer for scroll animations
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const element = entry.target as HTMLElement;
-            element.style.opacity = '1';
-            element.style.transform = 'translateY(0) scale(1)';
-            setVisibleElements(prev => new Set(prev).add(entry.target.className));
+            element.style.opacity = "1";
+            element.style.transform = "translateY(0) scale(1)";
           }
         });
       },
-      { threshold: 0.1, rootMargin: '50px' }
+      { threshold: 0.1, rootMargin: "50px" }
     );
 
-    // Observe elements for scroll animations
     setTimeout(() => {
       const elementsToObserve = document.querySelectorAll(
-        '.animate-on-scroll, .stat-card, .chart-card, .report-card'
+        ".animate-on-scroll, .stat-card, .chart-card, .report-card"
       );
-      elementsToObserve.forEach(el => observer.observe(el));
+      elementsToObserve.forEach((el) => observer.observe(el));
     }, 600);
 
-    // Fetch user statistics
     fetchUserStats();
     fetchBugReports();
     fetchTestResults();
     fetchRecentActivity();
 
-    // Set up periodic refresh every 30 seconds
     const refreshInterval = setInterval(() => {
       fetchUserStats();
       fetchBugReports();
@@ -107,77 +149,70 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Listen for storage events to refresh when user performs actions in other tabs
   useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'dashboard-refresh') {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "dashboard-refresh") {
         fetchUserStats();
         fetchBugReports();
         fetchTestResults();
         fetchRecentActivity();
-        localStorage.removeItem('dashboard-refresh'); // Clean up
+        localStorage.removeItem("dashboard-refresh");
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const fetchUserStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-
-      // If no valid token, use default stats
-      if (!token || token === 'null' || token === 'undefined') {
-        const defaultStats = {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        const defaultStats: Stats = {
           linesAnalyzed: 0,
           languagesUsed: 0,
           apisSupported: 5,
           accuracyRate: 0,
           totalAnalyses: 0,
           totalTests: 0,
-          totalBugReports: 0
+          totalBugReports: 0,
         };
         setStats(defaultStats);
         animateCounters(defaultStats);
         return;
       }
 
-      const response = await fetch('/api/user/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch("/api/user/stats", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data: { stats: Stats } = await response.json();
         setStats(data.stats);
         animateCounters(data.stats);
       } else {
-        // If API fails, use default stats
-        const defaultStats = {
+        const defaultStats: Stats = {
           linesAnalyzed: 0,
           languagesUsed: 0,
           apisSupported: 5,
           accuracyRate: 0,
           totalAnalyses: 0,
           totalTests: 0,
-          totalBugReports: 0
+          totalBugReports: 0,
         };
         setStats(defaultStats);
         animateCounters(defaultStats);
       }
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      // Use default stats on error
-      const defaultStats = {
+      console.error("Failed to fetch stats:", error);
+      const defaultStats: Stats = {
         linesAnalyzed: 0,
         languagesUsed: 0,
         apisSupported: 5,
         accuracyRate: 0,
         totalAnalyses: 0,
         totalTests: 0,
-        totalBugReports: 0
+        totalBugReports: 0,
       };
       setStats(defaultStats);
       animateCounters(defaultStats);
@@ -186,139 +221,127 @@ const Dashboard = () => {
 
   const fetchBugReports = async () => {
     try {
-      const token = localStorage.getItem('token');
-
-      if (!token || token === 'null' || token === 'undefined') {
+      const token = localStorage.getItem("token");
+      if (!token) {
         setBugReports([]);
         return;
       }
 
-      const response = await fetch('/api/bug-reports', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch("/api/bug-reports", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setBugReports(data.data?.bugReports?.slice(0, 5) || []); // Latest 5
+        const data: { data: { bugReports: BugReport[] } } = await response.json();
+        setBugReports(data.data?.bugReports?.slice(0, 5) || []);
       } else {
         setBugReports([]);
       }
     } catch (error) {
-      console.error('Failed to fetch bug reports:', error);
+      console.error("Failed to fetch bug reports:", error);
       setBugReports([]);
     }
   };
 
   const fetchTestResults = async () => {
     try {
-      const token = localStorage.getItem('token');
-
-      if (!token || token === 'null' || token === 'undefined') {
+      const token = localStorage.getItem("token");
+      if (!token) {
         setTestResults([]);
         return;
       }
 
-      const response = await fetch('/api/test-history', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch("/api/test-history", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setTestResults(data.data?.slice(0, 5) || []); // Latest 5
+        const data: { data: TestResult[] } = await response.json();
+        setTestResults(data.data?.slice(0, 5) || []);
       } else {
         setTestResults([]);
       }
     } catch (error) {
-      console.error('Failed to fetch test results:', error);
+      console.error("Failed to fetch test results:", error);
       setTestResults([]);
     }
   };
 
   const fetchRecentActivity = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token || token === 'null') {
+      const token = localStorage.getItem("token");
+      if (!token) {
         setRecentActivity([]);
         return;
       }
 
-      // Fetch real activity from multiple endpoints
       const [analysisResponse, testResponse, bugResponse] = await Promise.allSettled([
-        fetch('/api/analysis-history?limit=3', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        fetch("/api/analysis-history?limit=3", {
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('/api/test-history?limit=3', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        fetch("/api/test-history?limit=3", {
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('/api/bug-reports?limit=3', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch("/api/bug-reports?limit=3", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
-      const activities = [];
+      const activities: Activity[] = [];
 
-      // Process analysis history
-      if (analysisResponse.status === 'fulfilled' && analysisResponse.value.ok) {
-        const data = await analysisResponse.value.json();
-        data.data?.forEach(item => {
+      if (analysisResponse.status === "fulfilled" && analysisResponse.value.ok) {
+        const data: { data: AnalysisHistoryItem[] } = await analysisResponse.value.json();
+        data.data?.forEach((item) => {
           activities.push({
             id: `analysis-${item.id || Date.now()}`,
-            type: 'analysis',
-            description: `Code analysis completed for ${item.language || 'unknown'} code`,
-            time: new Date(item.timestamp).toLocaleString(),
-            icon: Brain
+            type: "analysis",
+            description: `Code analysis completed for ${item.language || "unknown"} code`,
+            time: item.timestamp ? new Date(item.timestamp).toLocaleString() : new Date().toLocaleString(),
+            icon: Brain,
           });
         });
       }
 
-      // Process test history
-      if (testResponse.status === 'fulfilled' && testResponse.value.ok) {
-        const data = await testResponse.value.json();
-        data.data?.forEach(item => {
+      if (testResponse.status === "fulfilled" && testResponse.value.ok) {
+        const data: { data: TestHistoryItem[] } = await testResponse.value.json();
+        data.data?.forEach((item) => {
           activities.push({
             id: `test-${item.id || Date.now()}`,
-            type: 'test',
-            description: `Test suite generated for ${item.language || 'unknown'} code`,
-            time: new Date(item.timestamp).toLocaleString(),
-            icon: TestTube
+            type: "test",
+            description: `Test suite generated for ${item.language || "unknown"} code`,
+            time: item.timestamp ? new Date(item.timestamp).toLocaleString() : new Date().toLocaleString(),
+            icon: TestTube,
           });
         });
       }
 
-      // Process bug reports
-      if (bugResponse.status === 'fulfilled' && bugResponse.value.ok) {
-        const data = await bugResponse.value.json();
-        data.data?.bugReports?.forEach(item => {
+      if (bugResponse.status === "fulfilled" && bugResponse.value.ok) {
+        const data: { data: { bugReports: BugReport[] } } = await bugResponse.value.json();
+        data.data?.bugReports?.forEach((item) => {
           activities.push({
             id: `bug-${item.id || Date.now()}`,
-            type: 'bug',
-            description: `Bug report: ${item.title || 'Bug analysis completed'}`,
-            time: new Date(item.createdAt).toLocaleString(),
-            icon: Bug
+            type: "bug",
+            description: `Bug report: ${item.title || "Bug analysis completed"}`,
+            time: item.createdAt ? new Date(item.createdAt).toLocaleString() : new Date().toLocaleString(),
+            icon: Bug,
           });
         });
       }
 
-      // Sort by time and take latest 5
       activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
       setRecentActivity(activities.slice(0, 5));
-
     } catch (error) {
-      console.error('Failed to fetch recent activity:', error);
+      console.error("Failed to fetch recent activity:", error);
       setRecentActivity([]);
     }
   };
 
-  const animateCounters = (targetStats) => {
+  const animateCounters = (targetStats: Stats) => {
     const duration = 2000;
     const steps = 60;
     const stepDuration = duration / steps;
-
     let currentStep = 0;
+
     const interval = setInterval(() => {
       currentStep++;
       const progress = currentStep / steps;
@@ -327,7 +350,10 @@ const Dashboard = () => {
         linesAnalyzed: Math.floor(targetStats.linesAnalyzed * progress),
         languagesUsed: Math.floor(targetStats.languagesUsed * progress),
         apisSupported: Math.floor(targetStats.apisSupported * progress),
-        accuracyRate: Math.floor(targetStats.accuracyRate * progress)
+        accuracyRate: Math.floor(targetStats.accuracyRate * progress),
+        totalAnalyses: Math.floor(targetStats.totalAnalyses * progress),
+        totalTests: Math.floor(targetStats.totalTests * progress),
+        totalBugReports: Math.floor(targetStats.totalBugReports * progress),
       });
 
       if (currentStep >= steps) {
@@ -337,34 +363,40 @@ const Dashboard = () => {
     }, stepDuration);
   };
 
-  const exportToPDF = async (type, data) => {
+  const exportToPDF = async (type: "test-suite" | "bug-report", data: BugReport | TestResult) => {
     try {
-      const response = await fetch('/api/export/pdf', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("No authentication token found");
+        return;
+      }
+
+      const response = await fetch("/api/export/pdf", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ type, data })
+        body: JSON.stringify({ type, data }),
       });
 
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `${type}_report_${Date.now()}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        toast.success('PDF exported successfully!');
+        toast.success("PDF exported successfully!");
       } else {
-        toast.error('Failed to export PDF');
+        toast.error("Failed to export PDF");
       }
     } catch (error) {
-      toast.error('Export failed');
-      console.error('Export error:', error);
+      toast.error("Export failed");
+      console.error("Export error:", error);
     }
   };
 
@@ -374,7 +406,10 @@ const Dashboard = () => {
         <div className="text-center">
           <div className="relative">
             <div className="w-20 h-20 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-pink-500/30 border-b-pink-500 rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+            <div
+              className="absolute inset-0 w-20 h-20 border-4 border-pink-500/30 border-b-pink-500 rounded-full animate-spin mx-auto"
+              style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+            ></div>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">Loading Dashboard</h2>
           <p className="text-purple-300 animate-pulse">Preparing your analytics...</p>
@@ -388,15 +423,16 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${isPageLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
-      {/* Animated Background Elements */}
+    <div
+      className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
+        isPageLoaded ? "animate-fade-in" : "opacity-0"
+      }`}
+    >
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-20 w-32 h-32 bg-purple-500/10 rounded-full animate-float"></div>
         <div className="absolute bottom-20 right-20 w-24 h-24 bg-blue-500/10 rounded-full animate-float-delayed"></div>
         <div className="absolute top-1/2 left-10 w-16 h-16 bg-pink-500/10 rounded-full animate-float"></div>
         <div className="absolute bottom-1/3 left-1/3 w-20 h-20 bg-cyan-500/10 rounded-full animate-float-delayed"></div>
-
-        {/* Floating particles */}
         {[...Array(15)].map((_, i) => (
           <div
             key={i}
@@ -405,68 +441,66 @@ const Dashboard = () => {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`
+              animationDuration: `${3 + Math.random() * 4}s`,
             }}
           />
         ))}
       </div>
 
       <div className="relative z-10 container mx-auto px-6 py-8">
-        {/* Header */}
-        <div className={`mb-12 text-center ${isPageLoaded ? 'animate-slide-in-top' : 'opacity-0'}`}>
+        <div className={`mb-12 text-center ${isPageLoaded ? "animate-slide-in-top" : "opacity-0"}`}>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent animate-gradient">
             AI QA Dashboard
           </h1>
           <p className="text-xl text-gray-300 mb-2">
-            Welcome back, <span className="text-purple-400 font-semibold">{user?.name}</span>
+            Welcome back, <span className="text-purple-400 font-semibold">{user?.name || "User"}</span>
           </p>
           <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 text-sm">
-            {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)} Dashboard
+            {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"} Dashboard
           </Badge>
         </div>
 
-        {/* Statistics Cards */}
         <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
             {
-              title: 'Lines of Code Analyzed',
+              title: "Lines of Code Analyzed",
               value: stats.linesAnalyzed,
-              suffix: '+',
+              suffix: "+",
               icon: Code,
-              color: 'from-blue-500 to-cyan-500',
-              trend: '+12%'
+              color: "from-blue-500 to-cyan-500",
+              trend: "+12%",
             },
             {
-              title: 'Programming Languages',
+              title: "Programming Languages",
               value: stats.languagesUsed,
-              suffix: '+',
+              suffix: "+",
               icon: Globe,
-              color: 'from-green-500 to-emerald-500',
-              trend: '+3'
+              color: "from-green-500 to-emerald-500",
+              trend: "+3",
             },
             {
-              title: 'AI APIs Supported',
+              title: "AI APIs Supported",
               value: stats.apisSupported,
-              suffix: '+',
+              suffix: "+",
               icon: Database,
-              color: 'from-purple-500 to-pink-500',
-              trend: 'Stable'
+              color: "from-purple-500 to-pink-500",
+              trend: "Stable",
             },
             {
-              title: 'Accuracy Rate',
+              title: "Accuracy Rate",
               value: stats.accuracyRate,
-              suffix: '%',
+              suffix: "%",
               icon: Target,
-              color: 'from-orange-500 to-red-500',
-              trend: '+5%'
-            }
+              color: "from-orange-500 to-red-500",
+              trend: "+5%",
+            },
           ].map((stat, index) => {
-            const Icon = stat.icon;
+            const Icon = stat.icon as LucideIcon;
             return (
               <Card
                 key={stat.title}
                 className={`stat-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20`}
-                style={{transitionDelay: `${index * 100}ms`}}
+                style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -481,7 +515,8 @@ const Dashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm text-gray-400">{stat.title}</p>
                     <p className="text-3xl font-bold text-white">
-                      {stat.value.toLocaleString()}{stat.suffix}
+                      {stat.value.toLocaleString()}
+                      {stat.suffix}
                     </p>
                   </div>
                 </CardContent>
@@ -490,17 +525,23 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-lg">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-purple-600">Overview</TabsTrigger>
-            <TabsTrigger value="test-suites" className="data-[state=active]:bg-purple-600">Test Suites</TabsTrigger>
-            <TabsTrigger value="bug-reports" className="data-[state=active]:bg-purple-600">Bug Reports</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">Analytics</TabsTrigger>
+            <TabsTrigger value="overview" className="data-[state=active]:bg-purple-600">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="test-suites" className="data-[state=active]:bg-purple-600">
+              Test Suites
+            </TabsTrigger>
+            <TabsTrigger value="bug-reports" className="data-[state=active]:bg-purple-600">
+              Bug Reports
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
+              Analytics
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
-            {/* Recent Activity */}
             <Card className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
@@ -510,10 +551,13 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => {
+                  {recentActivity.map((activity) => {
                     const Icon = activity.icon;
                     return (
-                      <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                      <div
+                        key={activity.id}
+                        className="flex items-center gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                      >
                         <div className="p-2 rounded-lg bg-purple-600/20">
                           <Icon className="h-4 w-4 text-purple-400" />
                         </div>
@@ -533,7 +577,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Test Suites</h2>
               <Button
-                onClick={() => window.location.href = '/test-suites'}
+                onClick={() => (window.location.href = "/test-suites")}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -543,16 +587,19 @@ const Dashboard = () => {
 
             <div className="grid gap-6">
               {testResults.map((test, index) => (
-                <Card key={index} className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
+                <Card
+                  key={test.id || index}
+                  className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20"
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-white">{test.purpose || 'Test Suite'}</CardTitle>
+                      <CardTitle className="text-white">{test.purpose || "Test Suite"}</CardTitle>
                       <div className="flex gap-2">
-                        <Badge className="bg-blue-600">{test.language}</Badge>
+                        <Badge className="bg-blue-600">{test.language || "Unknown"}</Badge>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => exportToPDF('test-suite', test)}
+                          onClick={() => exportToPDF("test-suite", test)}
                           className="border-white/20 text-white hover:bg-white/10"
                         >
                           <Download className="h-4 w-4" />
@@ -560,12 +607,12 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <CardDescription className="text-gray-300">
-                      Generated {new Date(test.timestamp).toLocaleDateString()}
+                      Generated {test.timestamp ? new Date(test.timestamp).toLocaleDateString() : "Unknown"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-300 text-sm">
-                      {typeof test.tests === 'string' ? test.tests.substring(0, 200) + '...' : 'Test suite generated successfully'}
+                      {typeof test.tests === "string" ? test.tests.substring(0, 200) + "..." : "Test suite generated successfully"}
                     </p>
                   </CardContent>
                 </Card>
@@ -577,7 +624,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Bug Reports</h2>
               <Button
-                onClick={() => window.location.href = '/bug-reports'}
+                onClick={() => (window.location.href = "/bug-reports")}
                 className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -586,23 +633,32 @@ const Dashboard = () => {
             </div>
 
             <div className="grid gap-6">
-              {bugReports.map((bug, index) => (
-                <Card key={bug.id} className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
+              {bugReports.map((bug) => (
+                <Card
+                  key={bug.id || Date.now()}
+                  className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20"
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-white">{bug.title}</CardTitle>
+                      <CardTitle className="text-white">{bug.title || "Untitled"}</CardTitle>
                       <div className="flex gap-2">
-                        <Badge className={`${
-                          bug.severity === 'critical' ? 'bg-red-600' :
-                          bug.severity === 'high' ? 'bg-orange-600' :
-                          bug.severity === 'medium' ? 'bg-yellow-600' : 'bg-green-600'
-                        }`}>
-                          {bug.severity}
+                        <Badge
+                          className={`${
+                            bug.severity === "critical"
+                              ? "bg-red-600"
+                              : bug.severity === "high"
+                              ? "bg-orange-600"
+                              : bug.severity === "medium"
+                              ? "bg-yellow-600"
+                              : "bg-green-600"
+                          }`}
+                        >
+                          {bug.severity || "Unknown"}
                         </Badge>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => exportToPDF('bug-report', bug)}
+                          onClick={() => exportToPDF("bug-report", bug)}
                           className="border-white/20 text-white hover:bg-white/10"
                         >
                           <Download className="h-4 w-4" />
@@ -610,11 +666,11 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <CardDescription className="text-gray-300">
-                      Created {new Date(bug.createdAt).toLocaleDateString()}
+                      Created {bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "Unknown"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-300 text-sm">{bug.description.substring(0, 200)}...</p>
+                    <p className="text-gray-300 text-sm">{bug.description?.substring(0, 200) || "No description available."}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -622,31 +678,15 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="chart-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">Usage Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-400">
-                    <BarChart3 className="h-16 w-16 mb-4" />
-                    <p>Analytics chart will be implemented here</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="chart-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">Performance Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-400">
-                    <TrendingUp className="h-16 w-16 mb-4" />
-                    <p>Performance metrics will be implemented here</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Analytics</CardTitle>
+                <CardDescription className="text-gray-300">Coming soon...</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">Detailed analytics will be available in a future update.</p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

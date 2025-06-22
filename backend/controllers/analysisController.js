@@ -333,6 +333,50 @@ class AnalysisController {
         }
       }
 
+      // --- Save bugs to BugReport model ---
+      try {
+        const BugReport = require('../models/BugReport');
+        const categories = [
+          { key: 'security', severity: 'high' },
+          { key: 'performance', severity: 'medium' },
+          { key: 'optimization', severity: 'low' },
+          { key: 'functionality', severity: 'high' }
+        ];
+        for (const cat of categories) {
+          if (Array.isArray(analysisResult[cat.key])) {
+            for (const issue of analysisResult[cat.key]) {
+              // Save to global BugReport collection
+              const bug = await BugReport.create({
+                title: `${cat.key.charAt(0).toUpperCase() + cat.key.slice(1)} Issue`,
+                description: issue,
+                severity: cat.severity,
+                status: 'open',
+                language: detectedLanguage,
+                source: 'analysis',
+                createdBy: req.user ? req.user._id : null
+              });
+              // Also add to user's bugReports array
+              if (req.user && req.user.addBugReport) {
+                await req.user.addBugReport({
+                  id: bug._id.toString(),
+                  title: bug.title,
+                  description: bug.description,
+                  severity: bug.severity,
+                  status: bug.status,
+                  language: bug.language,
+                  aiAnalysis: null,
+                  createdAt: bug.createdAt,
+                  updatedAt: bug.updatedAt
+                });
+              }
+            }
+          }
+        }
+      } catch (bugSaveError) {
+        logger.warn('Failed to save bug reports from analysis:', bugSaveError);
+      }
+      // --- End BugReport save ---
+
       res.json({
         status: 'success',
         data: {

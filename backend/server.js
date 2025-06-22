@@ -10,6 +10,8 @@ const rateLimiter = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 const analysisRoutes = require('./routes/analysis');
 const authRoutes = require('./routes/auth');
+const bugReportsRoutes = require('./routes/bugReports');
+const exportRoutes = require('./routes/export');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,6 +69,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', analysisRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/bug-reports', bugReportsRoutes);
+app.use('/api/export', exportRoutes);
 
 app.get('/health', (req, res) => {
   res.json({

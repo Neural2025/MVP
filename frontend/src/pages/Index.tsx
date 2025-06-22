@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -16,31 +15,21 @@ import {
   Github,
   Brain,
   Loader2,
-  Key,
-  Search,
-  CheckCircle,
-  XCircle,
   Moon,
   Sun,
-  User,
   LogOut,
-  Download,
-  FileJson,
-  FileImage,
-  TestTube,
   Bug,
   Zap,
-  Shield,
-  BarChart3
+  Shield
 } from "lucide-react";
 import { toast } from "sonner";
-import { analyzeCode, generateTests } from "@/lib/api";
-import CodeEditor from "@/components/CodeEditor";
+import { analyzeCode } from "@/lib/api";
 import ResultsDashboard from "@/components/ResultsDashboard";
+import Navbar from "@/components/Navbar";
 
 const Index = () => {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const { trackCodeAnalysis, trackTestGeneration, trackBugReport } = useStatsTracking();
+  const { trackCodeAnalysis } = useStatsTracking();
 
   // App state
   const [currentStep, setCurrentStep] = useState('role-selection');
@@ -51,27 +40,18 @@ const Index = () => {
   const [inputMethod, setInputMethod] = useState('paste');
   const [code, setCode] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [purpose, setPurpose] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeyStatus, setApiKeyStatus] = useState('');
 
   // Loading states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingTests, setIsGeneratingTests] = useState(false);
-  const [isTestingApiKey, setIsTestingApiKey] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingStatus, setLoadingStatus] = useState('');
 
   // Results
   const [analysisResults, setAnalysisResults] = useState(null);
-  const [testResults, setTestResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
-
-  // Test execution states
-  const [isRunningTests, setIsRunningTests] = useState(false);
-  const [testRole, setTestRole] = useState('developer');
 
   // Initialize role from user data
   useEffect(() => {
@@ -94,49 +74,39 @@ const Index = () => {
     toast.success(`Welcome, ${role}! Let's analyze some code.`);
   };
 
-  // API Key testing
-  const testApiKey = async () => {
-    if (!apiKey.trim()) {
-      toast.error('Please enter an API key');
-      return;
-    }
 
-    setIsTestingApiKey(true);
-    try {
-      const response = await fetch('/api/test-api-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ apiKey: apiKey.trim() }),
-      });
 
-      const result = await response.json();
-
-      if (result.status === 'success') {
-        setApiKeyStatus('valid');
-        toast.success('✅ API Key is valid and working!');
-      } else {
-        setApiKeyStatus('invalid');
-        toast.error(`❌ ${result.error}`);
-      }
-    } catch (error) {
-      setApiKeyStatus('invalid');
-      toast.error('❌ Failed to test API key');
-    } finally {
-      setIsTestingApiKey(false);
-    }
-  };
-
-  // Handle code analysis
+  // Handle code analysis (accepts code from textarea/upload or GitHub)
   const handleAnalyze = async () => {
-    if (!code.trim() && !githubUrl.trim()) {
-      toast.error('Please provide code to analyze');
+    // Prevent duplicate requests
+    if (isAnalyzing) return;
+
+    // Must have at least one code source
+    let codeToAnalyze = code.trim();
+    const githubUrlToAnalyze = githubUrl.trim();
+    if (!codeToAnalyze && !githubUrlToAnalyze) {
+      toast.error('Please provide code (paste/upload) or a GitHub repo URL');
       return;
     }
 
+    // Limit code to 2000 lines or 20000 characters (whichever is smaller)
+    if (codeToAnalyze) {
+      const lines = codeToAnalyze.split('\n');
+      if (lines.length > 2000) {
+        codeToAnalyze = lines.slice(0, 2000).join('\n');
+      }
+      if (codeToAnalyze.length > 20000) {
+        codeToAnalyze = codeToAnalyze.slice(0, 20000);
+      }
+    }
+
+    // Purpose and language are required
     if (!purpose.trim()) {
       toast.error('Please describe what your code is supposed to do');
+      return;
+    }
+    if (!selectedLanguage) {
+      toast.error('Please select a programming language');
       return;
     }
 
@@ -152,40 +122,94 @@ const Index = () => {
 
       setLoadingStatus('Sending code to AI for analysis...');
 
-      const response = await fetch('/api/analyze', {
+      // Build request body, omitting empty fields
+      const body: Record<string, string> = {
+        purpose: purpose.trim(),
+        language: selectedLanguage,
+      };
+      if (codeToAnalyze) body.code = codeToAnalyze;
+      if (githubUrlToAnalyze) body.githubUrl = githubUrlToAnalyze;
+
+            const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          code: code.trim(),
-          purpose: purpose.trim(),
-          githubUrl: githubUrl.trim(),
-          language: selectedLanguage
-        }),
+        body: JSON.stringify(body),
       });
-
       clearInterval(progressInterval);
       setLoadingProgress(100);
       setLoadingStatus('Analysis complete!');
 
+      // Parse response
       const result = await response.json();
 
       if (result.status === 'success') {
         setAnalysisResults(result.data);
         setShowResults(true);
-
-        // Track successful analysis
-        trackCodeAnalysis(code.trim(), selectedLanguage, true);
-
-        // Trigger dashboard refresh
+        trackCodeAnalysis(codeToAnalyze || githubUrlToAnalyze, selectedLanguage, true);
         triggerDashboardRefresh();
-
         console.log('Analysis results set:', result.data);
-        toast.success('🎉 Code analysis completed successfully! Test panel should now be visible.');
+        // Debug: log the full analysis result structure
+        console.log('DEBUG: Full analysis result:', JSON.stringify(result.data, null, 2));
+
+        // --- Bug Reporting Integration ---
+        const categories = [
+          { key: 'security', severity: 'high' },
+          { key: 'performance', severity: 'medium' },
+          { key: 'optimization', severity: 'medium' },
+          { key: 'functionality', severity: 'low' }
+        ];
+        const token = localStorage.getItem('token');
+        let bugsReported = 0;
+        if (token && result.data) {
+          for (const cat of categories) {
+            const issues = result.data[cat.key];
+            if (Array.isArray(issues) && issues.length > 0) {
+              for (const issue of issues) {
+                // POST each bug
+                fetch('/api/bug-reports', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    title: `${cat.key.charAt(0).toUpperCase() + cat.key.slice(1)} Issue`,
+                    description: issue,
+                    severity: cat.severity,
+                    status: 'open',
+                    language: selectedLanguage,
+                    source: 'analysis',
+                  })
+                })
+                  .then(async (resp) => {
+                    if (!resp.ok) {
+                      const errText = await resp.text();
+                      toast.error(`Failed to save bug: ${resp.status} ${errText}`);
+                      console.error('Bug report POST failed:', resp.status, errText);
+                    } else {
+                      toast.success('Bug report saved!');
+                      console.log('Bug report POST success:', resp.status);
+                    }
+                  })
+                  .catch((err) => {
+                    toast.error('Failed to save bug (network error).');
+                    console.error('Bug report POST error:', err);
+                  });
+                bugsReported++;
+              }
+            }
+          }
+        }
+        if (bugsReported > 0) {
+          toast.info(`${bugsReported} bugs reported and saved as 'open'.`);
+        }
+        // --- End Bug Reporting Integration ---
+
+        toast.success('🎉 Code analysis completed successfully!');
       } else {
-        // Track failed analysis
-        trackCodeAnalysis(code.trim(), selectedLanguage, false);
+        trackCodeAnalysis(codeToAnalyze || githubUrlToAnalyze, selectedLanguage, false);
         toast.error(`❌ Analysis failed: ${result.error}`);
       }
     } catch (error) {
@@ -265,68 +289,6 @@ const Index = () => {
     }
   };
 
-  // Handle test execution
-  const handleRunTests = async () => {
-    if (!code.trim() && !githubUrl.trim()) {
-      toast.error('Please provide code to test');
-      return;
-    }
-
-    setIsRunningTests(true);
-    setLoadingProgress(0);
-    setLoadingStatus('Executing tests...');
-
-    try {
-      const progressInterval = setInterval(() => {
-        setLoadingProgress(prev => Math.min(prev + 15, 90));
-      }, 300);
-
-      setLoadingStatus('Running test suites...');
-
-      const response = await fetch('/api/execute-tests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: code.trim(),
-          purpose: purpose.trim(),
-          githubUrl: githubUrl.trim(),
-          language: selectedLanguage,
-          role: testRole
-        }),
-      });
-
-      clearInterval(progressInterval);
-      setLoadingProgress(100);
-      setLoadingStatus('Tests completed!');
-
-      const result = await response.json();
-
-      if (result.status === 'success') {
-        setTestResults(result.data);
-
-        // Track test execution
-        trackTestGeneration();
-
-        // Trigger dashboard refresh
-        triggerDashboardRefresh();
-
-        const passRate = Math.round((result.data.summary.passed / result.data.summary.totalTests) * 100);
-        toast.success(`🧪 Tests executed! ${result.data.summary.passed}/${result.data.summary.totalTests} passed (${passRate}%)`);
-      } else {
-        toast.error(`❌ Test execution failed: ${result.error}`);
-      }
-    } catch (error) {
-      toast.error('❌ Failed to execute tests. Please try again.');
-      console.error('Test execution error:', error);
-    } finally {
-      setIsRunningTests(false);
-      setLoadingProgress(0);
-      setLoadingStatus('');
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
@@ -403,27 +365,15 @@ const Index = () => {
                 <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">🧪</div>
                 <CardTitle className="text-2xl text-white mb-2">Tester</CardTitle>
                 <CardDescription className="text-purple-200">
-                  Generate comprehensive test cases and security assessments
+                  Generate comprehensive security assessments
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-purple-300">
-                  <div className="flex items-center gap-2">
-                    <TestTube className="h-4 w-4" />
-                    <span>Test Case Generation</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Security Testing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span>Edge Case Detection</span>
-                  </div>
+                  {/* Add any tester-specific features here if needed */}
                 </div>
               </CardContent>
             </Card>
-
             {/* Product Owner */}
             <Card
               className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20"
@@ -438,21 +388,11 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-purple-300">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Feature Validation</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Analytics & Reports</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileJson className="h-4 w-4" />
-                    <span>Export Capabilities</span>
-                  </div>
+                  {/* Add any product owner-specific features here if needed */}
                 </div>
               </CardContent>
             </Card>
+                
           </div>
         </div>
       </div>
@@ -462,113 +402,114 @@ const Index = () => {
   // Main App UI
   return (
     <div className={`min-h-screen transition-all duration-300 ${isDarkMode ? 'dark bg-slate-900' : 'bg-gray-50'}`}>
+      {/* Navbar */}
+      <Navbar />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-slate-900/80 border-b border-gray-200 dark:border-slate-700">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-40 w-full">
+        <div className="backdrop-blur-lg bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-b border-purple-700/30 shadow-xl">
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <Brain className="h-8 w-8 text-indigo-600" />
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <Brain className="h-8 w-8 text-indigo-600 dark:text-purple-300" />
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-purple-300 dark:to-pink-300">
                 AI QA Assistant
               </span>
             </div>
-
-            {/* Language Selector */}
-            <div className="flex-1 flex justify-center">
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="javascript">JavaScript</SelectItem>
-                  <SelectItem value="typescript">TypeScript</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="c">C</SelectItem>
-                  <SelectItem value="csharp">C#</SelectItem>
-                  <SelectItem value="php">PHP</SelectItem>
-                  <SelectItem value="ruby">Ruby</SelectItem>
-                  <SelectItem value="go">Go</SelectItem>
-                  <SelectItem value="rust">Rust</SelectItem>
-                  <SelectItem value="swift">Swift</SelectItem>
-                  <SelectItem value="kotlin">Kotlin</SelectItem>
-                  <SelectItem value="scala">Scala</SelectItem>
-                  <SelectItem value="dart">Dart</SelectItem>
-                  <SelectItem value="r">R</SelectItem>
-                  <SelectItem value="perl">Perl</SelectItem>
-                  <SelectItem value="lua">Lua</SelectItem>
-                  <SelectItem value="haskell">Haskell</SelectItem>
-                  <SelectItem value="erlang">Erlang</SelectItem>
-                  <SelectItem value="elixir">Elixir</SelectItem>
-                  <SelectItem value="clojure">Clojure</SelectItem>
-                  <SelectItem value="fsharp">F#</SelectItem>
-                  <SelectItem value="vbnet">VB.NET</SelectItem>
-                  <SelectItem value="objective-c">Objective-C</SelectItem>
-                  <SelectItem value="shell">Shell</SelectItem>
-                  <SelectItem value="bash">Bash</SelectItem>
-                  <SelectItem value="powershell">PowerShell</SelectItem>
-                  <SelectItem value="sql">SQL</SelectItem>
-                  <SelectItem value="html">HTML</SelectItem>
-                  <SelectItem value="css">CSS</SelectItem>
-                  <SelectItem value="sass">SASS/SCSS</SelectItem>
-                  <SelectItem value="less">LESS</SelectItem>
-                  <SelectItem value="xml">XML</SelectItem>
-                  <SelectItem value="json">JSON</SelectItem>
-                  <SelectItem value="yaml">YAML</SelectItem>
-                  <SelectItem value="toml">TOML</SelectItem>
-                  <SelectItem value="dockerfile">Dockerfile</SelectItem>
-                  <SelectItem value="makefile">Makefile</SelectItem>
-                  <SelectItem value="cmake">CMake</SelectItem>
-                  <SelectItem value="assembly">Assembly</SelectItem>
-                  <SelectItem value="cobol">COBOL</SelectItem>
-                  <SelectItem value="fortran">Fortran</SelectItem>
-                  <SelectItem value="pascal">Pascal</SelectItem>
-                  <SelectItem value="delphi">Delphi</SelectItem>
-                  <SelectItem value="matlab">MATLAB</SelectItem>
-                  <SelectItem value="octave">Octave</SelectItem>
-                  <SelectItem value="julia">Julia</SelectItem>
-                  <SelectItem value="nim">Nim</SelectItem>
-                  <SelectItem value="crystal">Crystal</SelectItem>
-                  <SelectItem value="zig">Zig</SelectItem>
-                  <SelectItem value="v">V</SelectItem>
-                  <SelectItem value="solidity">Solidity</SelectItem>
-                  <SelectItem value="vyper">Vyper</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Right Side */}
-            <div className="flex items-center gap-4">
-              {/* Theme Toggle */}
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="rounded-full ml-4"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-indigo-600" />}
+            </Button>
+            {/* User Role/Logout */}
+            <div className="flex items-center gap-3 ml-4">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 text-white">
+                <span className="text-2xl">
+                  {selectedRole === 'developer' ? '👨‍💻' : selectedRole === 'tester' ? '🧪' : '📊'}
+                </span>
+                <span className="text-sm font-medium capitalize">{selectedRole}</span>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleTheme}
-                className="rounded-full"
+                onClick={logout}
+                className="text-red-600 hover:text-red-700"
+                aria-label="Logout"
               >
-                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                <LogOut className="h-4 w-4" />
               </Button>
-
-              {/* User Menu */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 text-white">
-                  <span className="text-2xl">
-                    {selectedRole === 'developer' ? '👨‍💻' : selectedRole === 'tester' ? '🧪' : '📊'}
-                  </span>
-                  <span className="text-sm font-medium capitalize">{selectedRole}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={logout}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
+          </div>
+        </div>
+        {/* Language Selector below the main header, always visible, with clear background for both modes */}
+        <div className="w-full px-0 border-t border-purple-700/20">
+          <div className="container mx-auto px-6 py-3 flex justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border border-purple-400/40 dark:border-purple-900/40 shadow">
+                <SelectValue placeholder="Select Language" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-slate-900 border border-purple-500/30 dark:border-purple-800/50">
+                <SelectItem value="javascript">JavaScript</SelectItem>
+                <SelectItem value="typescript">TypeScript</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="cpp">C++</SelectItem>
+                <SelectItem value="c">C</SelectItem>
+                <SelectItem value="csharp">C#</SelectItem>
+                <SelectItem value="php">PHP</SelectItem>
+                <SelectItem value="ruby">Ruby</SelectItem>
+                <SelectItem value="go">Go</SelectItem>
+                <SelectItem value="rust">Rust</SelectItem>
+                <SelectItem value="swift">Swift</SelectItem>
+                <SelectItem value="kotlin">Kotlin</SelectItem>
+                <SelectItem value="scala">Scala</SelectItem>
+                <SelectItem value="dart">Dart</SelectItem>
+                <SelectItem value="r">R</SelectItem>
+                <SelectItem value="perl">Perl</SelectItem>
+                <SelectItem value="lua">Lua</SelectItem>
+                <SelectItem value="haskell">Haskell</SelectItem>
+                <SelectItem value="erlang">Erlang</SelectItem>
+                <SelectItem value="elixir">Elixir</SelectItem>
+                <SelectItem value="clojure">Clojure</SelectItem>
+                <SelectItem value="fsharp">F#</SelectItem>
+                <SelectItem value="vbnet">VB.NET</SelectItem>
+                <SelectItem value="objective-c">Objective-C</SelectItem>
+                <SelectItem value="shell">Shell</SelectItem>
+                <SelectItem value="bash">Bash</SelectItem>
+                <SelectItem value="powershell">PowerShell</SelectItem>
+                <SelectItem value="sql">SQL</SelectItem>
+                <SelectItem value="html">HTML</SelectItem>
+                <SelectItem value="css">CSS</SelectItem>
+                <SelectItem value="sass">SASS/SCSS</SelectItem>
+                <SelectItem value="less">LESS</SelectItem>
+                <SelectItem value="xml">XML</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
+                <SelectItem value="yaml">YAML</SelectItem>
+                <SelectItem value="toml">TOML</SelectItem>
+                <SelectItem value="dockerfile">Dockerfile</SelectItem>
+                <SelectItem value="makefile">Makefile</SelectItem>
+                <SelectItem value="cmake">CMake</SelectItem>
+                <SelectItem value="assembly">Assembly</SelectItem>
+                <SelectItem value="cobol">COBOL</SelectItem>
+                <SelectItem value="fortran">Fortran</SelectItem>
+                <SelectItem value="pascal">Pascal</SelectItem>
+                <SelectItem value="delphi">Delphi</SelectItem>
+                <SelectItem value="matlab">MATLAB</SelectItem>
+                <SelectItem value="octave">Octave</SelectItem>
+                <SelectItem value="julia">Julia</SelectItem>
+                <SelectItem value="nim">Nim</SelectItem>
+                <SelectItem value="crystal">Crystal</SelectItem>
+                <SelectItem value="zig">Zig</SelectItem>
+                <SelectItem value="v">V</SelectItem>
+                <SelectItem value="solidity">Solidity</SelectItem>
+                <SelectItem value="vyper">Vyper</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>
@@ -648,15 +589,13 @@ const Index = () => {
                     <input
                       type="file"
                       multiple
-                      webkitdirectory=""
-                      directory=""
                       onChange={handleFileUpload}
                       className="hidden"
-                      id="folder-upload"
+                      id="file-upload"
                     />
                     <Button
                       variant="outline"
-                      onClick={() => document.getElementById('folder-upload')?.click()}
+                      onClick={() => document.getElementById('file-upload')?.click()}
                       className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
                     >
                       Choose Folder
@@ -674,51 +613,6 @@ const Index = () => {
                   onChange={(e) => setPurpose(e.target.value)}
                   className="min-h-[100px] resize-none"
                 />
-              </div>
-
-              {/* API Key Testing */}
-              <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Key className="h-4 w-4 text-indigo-600" />
-                  <span className="font-medium">API Key Testing</span>
-                </div>
-                <div className="flex gap-3">
-                  <div className="relative flex-1">
-                    <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="password"
-                      placeholder="Enter DeepSeek API Key to Test"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Button
-                    onClick={testApiKey}
-                    disabled={isTestingApiKey || !apiKey.trim()}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    {isTestingApiKey ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                    Test API Key
-                  </Button>
-                </div>
-                {apiKeyStatus && (
-                  <div className={`flex items-center gap-2 text-sm ${
-                    apiKeyStatus === 'valid' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {apiKeyStatus === 'valid' ? (
-                      <CheckCircle className="h-4 w-4" />
-                    ) : (
-                      <XCircle className="h-4 w-4" />
-                    )}
-                    {apiKeyStatus === 'valid' ? 'API Key is valid' : 'API Key is invalid'}
-                  </div>
-                )}
               </div>
 
               {/* Action Buttons */}
@@ -743,8 +637,6 @@ const Index = () => {
                     )}
                   </Button>
                 </div>
-
-
               </div>
             </CardContent>
           </Card>
@@ -753,133 +645,46 @@ const Index = () => {
         {/* Results Section */}
         {showResults && (
           <div className="space-y-6">
-            {/* Analysis Results */}
-            <ResultsDashboard
-              analysisResults={analysisResults}
-              testResults={testResults}
-            />
-
-            {/* Test Execution Panel - RIGHT AFTER ANALYSIS RESULTS */}
-            <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-4 border-emerald-400 dark:border-emerald-400 shadow-2xl animate-pulse">
-              <CardHeader className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50">
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <TestTube className="h-8 w-8 text-emerald-600 animate-bounce" />
-                  🧪 EXECUTE TEST SUITES - READY!
-                </CardTitle>
-                <CardDescription className="text-emerald-700 dark:text-emerald-300 font-bold text-lg">
-                  ✅ Code analyzed! Now run comprehensive tests to find bugs and issues
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-4 gap-4">
-                  {/* Test Role Selection */}
-                  <div className="md:col-span-3">
-                    <label className="text-sm font-medium mb-2 block">Choose Test Type</label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={testRole === 'developer' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTestRole('developer')}
-                        className="flex-1"
-                      >
-                        👨‍💻 Developer Tests
-                      </Button>
-                      <Button
-                        variant={testRole === 'tester' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTestRole('tester')}
-                        className="flex-1"
-                      >
-                        🧪 Tester Tests
-                      </Button>
-                      <Button
-                        variant={testRole === 'product_manager' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTestRole('product_manager')}
-                        className="flex-1"
-                      >
-                        📊 Product Manager Tests
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Run Tests Button */}
-                  <div className="md:col-span-1 flex items-end">
-                    <Button
-                      onClick={handleRunTests}
-                      disabled={isRunningTests || (!code.trim() && !githubUrl.trim())}
-                      className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-lg py-3"
-                    >
-                      {isRunningTests ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                          Running...
-                        </>
-                      ) : (
-                        <>
-                          <TestTube className="h-5 w-5 mr-2" />
-                          Execute Tests
-                        </>
-                      )}
-                    </Button>
+            {/* Modern Analysis Results Card */}
+            <div className="relative rounded-2xl shadow-2xl bg-gradient-to-br from-indigo-700 via-purple-800 to-pink-700 p-1 animate-in fade-in-0 duration-500">
+              <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <Brain className="h-10 w-10 text-purple-500 animate-pulse" />
+                  <div>
+                    <h2 className="text-3xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 bg-clip-text text-transparent">Analysis Results</h2>
+                    <p className="text-purple-400 font-medium">AI-powered insights and recommendations</p>
                   </div>
                 </div>
-
-                {/* Test Results Summary */}
-                {testResults && testResults.summary && (
-                  <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border">
-                    <h4 className="font-medium text-sm mb-3">Latest Test Results</h4>
-                    <div className="grid grid-cols-4 gap-3 text-center">
-                      <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
-                        <div className="font-bold text-blue-600">{testResults.summary.totalTests}</div>
-                        <div className="text-blue-600 text-xs">Total</div>
-                      </div>
-                      <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded">
-                        <div className="font-bold text-green-600">{testResults.summary.passed}</div>
-                        <div className="text-green-600 text-xs">Passed</div>
-                      </div>
-                      <div className="p-2 bg-red-50 dark:bg-red-950/30 rounded">
-                        <div className="font-bold text-red-600">{testResults.summary.failed}</div>
-                        <div className="text-red-600 text-xs">Failed</div>
-                      </div>
-                      <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded">
-                        <div className="font-bold text-purple-600">{testResults.summary.passRate}%</div>
-                        <div className="text-purple-600 text-xs">Pass Rate</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <div className="mb-6">
+                  <span className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs font-semibold uppercase tracking-wider shadow">{selectedLanguage}</span>
+                  <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">{inputMethod === 'paste' ? 'Manual Input' : inputMethod === 'github' ? 'GitHub' : 'Upload'}</span>
+                </div>
+                {/* Render Analysis Results Only */}
+                <ResultsDashboard analysisResults={analysisResults} testResults={null} />
+              </div>
+              <div className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+              <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+            </div>
           </div>
         )}
       </div>
 
       {/* Loading Overlay */}
-      {(isAnalyzing || isGeneratingTests || isRunningTests) && (
+      {(isAnalyzing || isGeneratingTests) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <Card className="w-96 shadow-2xl">
             <CardContent className="p-8 text-center">
               <div className="relative mb-6">
-                {isRunningTests ? (
-                  <TestTube className="h-16 w-16 text-emerald-600 animate-pulse mx-auto" />
-                ) : (
-                  <Brain className="h-16 w-16 text-indigo-600 animate-pulse mx-auto" />
-                )}
-                <div className={`absolute inset-0 ${
-                  isRunningTests ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-indigo-400 to-purple-400'
-                } rounded-full blur-xl opacity-30 animate-ping`}></div>
+                <Brain className="h-16 w-16 text-indigo-600 animate-pulse mx-auto" />
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-xl opacity-30 animate-ping"></div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {isAnalyzing ? 'Analyzing with DeepSeek AI...' :
-                 isRunningTests ? 'Executing Test Suites...' : 'Generating Tests...'}
+                {isAnalyzing ? 'Analyzing with DeepSeek AI...' : 'Generating Tests...'}
               </h3>
               <p className="text-muted-foreground mb-4">{loadingStatus || 'Processing your code...'}</p>
               <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    isRunningTests ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-indigo-600 to-purple-600'
-                  }`}
+                  className="h-2 rounded-full transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600"
                   style={{ width: `${loadingProgress}%` }}
                 ></div>
               </div>

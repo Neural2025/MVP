@@ -6,6 +6,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  role: string; // Added role property
 }
 
 interface AuthContextType {
@@ -39,10 +40,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check if user is logged in on app start
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('user');
-
+    console.log('[AuthContext] useEffect token:', token, 'userData:', userData);
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        // Patch: If role is missing, assign default
+        if (!parsedUser.role) {
+          parsedUser.role = 'user';
+        }
+        setUser(parsedUser);
+        console.log('[AuthContext] useEffect setUser:', parsedUser);
+
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('authToken');
@@ -54,6 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
+  console.log('[AuthContext] login() called with', email);
+
     try {
       setIsLoading(true);
       const response = await apiLogin({ email, password });
@@ -61,7 +71,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
-
+      console.log('[AuthContext] User after login:', response.user);
+      console.log('[AuthContext] Role after login:', response.user.role);
       toast.success('Login successful!');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Login failed';
