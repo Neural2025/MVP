@@ -526,17 +526,11 @@ const Dashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-lg">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-purple-600">
+          <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-lg">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="test-suites" className="data-[state=active]:bg-purple-600">
-              Test Suites
-            </TabsTrigger>
-            <TabsTrigger value="bug-reports" className="data-[state=active]:bg-purple-600">
-              Bug Reports
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-green-600">
               Analytics
             </TabsTrigger>
           </TabsList>
@@ -546,148 +540,64 @@ const Dashboard: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Activity className="h-5 w-5" />
-                  Recent Activity
+                  Team Metrics Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => {
-                    const Icon = activity.icon;
-                    return (
-                      <div
-                        key={activity.id}
-                        className="flex items-center gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-purple-600/20">
-                          <Icon className="h-4 w-4 text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{activity.description}</p>
-                          <p className="text-gray-400 text-sm">{activity.time}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-blue-700">{stats.coverage || 0}%</span>
+                    <span className="text-gray-700 mt-2">Code Coverage</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-green-700">{stats.bugsFixedByDev || 0}</span>
+                    <span className="text-gray-700 mt-2">Bugs Fixed by Developer</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-pink-700">{stats.bugsFoundByTester || 0}</span>
+                    <span className="text-gray-700 mt-2">Bugs Found by Tester</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-purple-700">{stats.totalBugReports || 0}</span>
+                    <span className="text-gray-700 mt-2">Total Bug Reports</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="test-suites" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Test Suites</h2>
-              <Button
-                onClick={() => (window.location.href = "/test-suites")}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Generate New Tests
-              </Button>
-            </div>
-
-            <div className="grid gap-6">
-              {testResults.map((test, index) => (
-                <Card
-                  key={test.id || index}
-                  className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-white">{test.purpose || "Test Suite"}</CardTitle>
-                      <div className="flex gap-2">
-                        <Badge className="bg-blue-600">{test.language || "Unknown"}</Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => exportToPDF("test-suite", test)}
-                          className="border-white/20 text-white hover:bg-white/10"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <CardDescription className="text-gray-300">
-                      Generated {test.timestamp ? new Date(test.timestamp).toLocaleDateString() : "Unknown"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 text-sm">
-                      {typeof test.tests === "string" ? test.tests.substring(0, 200) + "..." : "Test suite generated successfully"}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="bug-reports" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Bug Reports</h2>
-              <Button
-                onClick={() => (window.location.href = "/bug-reports")}
-                className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Bug Report
-              </Button>
-            </div>
-
-            <div className="grid gap-6">
-              {bugReports.map((bug) => (
-                <Card
-                  key={bug.id || Date.now()}
-                  className="report-card animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-white">{bug.title || "Untitled"}</CardTitle>
-                      <div className="flex gap-2">
-                        <Badge
-                          className={`${
-                            bug.severity === "critical"
-                              ? "bg-red-600"
-                              : bug.severity === "high"
-                              ? "bg-orange-600"
-                              : bug.severity === "medium"
-                              ? "bg-yellow-600"
-                              : "bg-green-600"
-                          }`}
-                        >
-                          {bug.severity || "Unknown"}
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => exportToPDF("bug-report", bug)}
-                          className="border-white/20 text-white hover:bg-white/10"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <CardDescription className="text-gray-300">
-                      Created {bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "Unknown"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 text-sm">{bug.description?.substring(0, 200) || "No description available."}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
+          <TabsContent value="analytics" className="space-y-8">
             <Card className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
-                <CardTitle className="text-white">Analytics</CardTitle>
-                <CardDescription className="text-gray-300">Coming soon...</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Brain className="h-5 w-5" />
+                  Analytics
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300">Detailed analytics will be available in a future update.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-blue-700">{stats.linesAnalyzed || 0}</span>
+                    <span className="text-gray-700 mt-2">Lines of Code Analyzed</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-green-700">{stats.languagesUsed || 0}</span>
+                    <span className="text-gray-700 mt-2">Languages Used</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-yellow-700">{stats.accuracyRate || 0}%</span>
+                    <span className="text-gray-700 mt-2">Analysis Accuracy</span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+                    <span className="text-2xl font-bold text-pink-700">{stats.totalAnalyses || 0}</span>
+                    <span className="text-gray-700 mt-2">Total Analyses</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
+
+          
         </Tabs>
       </div>
     </div>

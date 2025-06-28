@@ -12,6 +12,8 @@ const analysisRoutes = require('./routes/analysis');
 const authRoutes = require('./routes/auth');
 const bugReportsRoutes = require('./routes/bugReports');
 const exportRoutes = require('./routes/export');
+const teamRoutes = require('./routes/team');
+const testSuiteRoutes = require('./routes/testSuite');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -71,6 +73,8 @@ app.use('/api', analysisRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bug-reports', bugReportsRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/test-suites', testSuiteRoutes);
 
 app.get('/health', (req, res) => {
   res.json({

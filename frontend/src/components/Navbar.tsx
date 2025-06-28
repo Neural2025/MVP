@@ -94,24 +94,20 @@ const Navbar = () => {
   let navLinks: Array<{ href: string; label: string; icon: any }> = [];
   if (user && user.role) {
     const role = user.role.trim().toLowerCase();
-    // Debug: Print role
-    console.log('[Navbar] User role:', role);
-    // Debug: Print full user object
-    console.log('[Navbar] Full user object:', user);
-    if (['dev','developer'].includes(role)) {
+    if (["dev", "developer"].includes(role)) {
       navLinks = [
         { href: "/", label: "Home", icon: Home },
         { href: "/code-analysis", label: "Code Analysis", icon: Code },
         { href: "/bug-reports", label: "Bug Reporting", icon: Bug },
       ];
-    } else if (['tester', 'test', 'qa'].includes(role)) {
+    } else if (["tester", "test", "qa"].includes(role)) {
       navLinks = [
         { href: "/", label: "Home", icon: Home },
         { href: "/test-suites", label: "Test Suites", icon: TestTube },
         { href: "/bug-reports", label: "Bug Reporting", icon: Bug },
       ];
     } else if ([
-      'po', 'product_owner', 'productowner', 'product manager', 'productmanager', 'product owner', 'pm', 'owner', 'manager', 'product_manager'
+      "po", "product_owner", "productowner", "product manager", "productmanager", "product owner", "pm", "owner", "manager", "product_manager"
     ].includes(role)) {
       navLinks = [
         { href: "/", label: "Home", icon: Home },
@@ -119,13 +115,11 @@ const Navbar = () => {
         { href: "/dashboard", label: "Dashboard", icon: Shield },
       ];
     } else {
-      // Default for unauthenticated or unknown role
       navLinks = [
         { href: "/", label: "Home", icon: Home },
       ];
     }
   } else {
-    // Default for unauthenticated or unknown role
     navLinks = [
       { href: "/", label: "Home", icon: Home },
     ];
@@ -135,15 +129,11 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`navbar fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled || !isHomePage
-          ? 'bg-black/95 backdrop-blur-xl border-b border-purple-500/20 shadow-2xl shadow-purple-500/10'
-          : 'bg-black/80 backdrop-blur-lg'
-      }`}>
+      <nav className={`navbar fixed top-0 left-0 right-0 z-50 bg-white text-black`}>
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link to="/" className="nav-item flex items-center space-x-3 group min-w-0 flex-shrink-0">
+            <Link to="/" className="nav-item flex items-center space-x-3 min-w-0 flex-shrink-0">
               <div className="relative">
                 <div className="absolute inset-0 bg-purple-500 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-all duration-500 animate-pulse"></div>
                 <Brain className="h-7 w-7 lg:h-8 lg:w-8 text-purple-400 group-hover:text-purple-300 transition-all duration-300 relative z-10 animate-float" />
@@ -162,15 +152,10 @@ const Navbar = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`nav-item flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-xl transition-all duration-300 group relative overflow-hidden text-sm xl:text-base ${
-                    location.pathname === link.href
-                      ? 'text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/25'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
+                  className={`nav-item flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-xl ${location.pathname === link.href ? 'bg-black text-white' : 'text-black'}`}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <link.icon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300 relative z-10 flex-shrink-0" />
-                  <span className="font-medium relative z-10 whitespace-nowrap">{link.label}</span>
+                  <link.icon className="h-4 w-4" />
+                  <span className="font-medium whitespace-nowrap">{link.label}</span>
                 </Link>
               ))}
             </div>
@@ -219,7 +204,7 @@ const Navbar = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="nav-item hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-300 text-xs lg:text-sm px-2 lg:px-3"
+                      className="nav-item text-xs lg:text-sm px-2 lg:px-3 bg-black text-white border border-black"
                     >
                       Sign In
                     </Button>
@@ -227,7 +212,7 @@ const Navbar = () => {
                   <Link to="/signup">
                     <Button
                       size="sm"
-                      className="nav-item bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs lg:text-sm px-2 lg:px-3"
+                      className="nav-item bg-black text-white border border-white text-xs lg:text-sm px-2 lg:px-3"
                     >
                       Get Started
                     </Button>
@@ -240,7 +225,7 @@ const Navbar = () => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleMenu}
-                className="md:hidden nav-item rounded-full p-2"
+                className="md:hidden nav-item rounded-full p-2 bg-black text-white border border-white"
               >
                 {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -252,8 +237,8 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="mobile-menu fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={toggleMenu}></div>
-          <div className="absolute right-0 top-0 h-full w-80 bg-white dark:bg-slate-900 shadow-2xl">
+          <div className="absolute inset-0 bg-black opacity-80" onClick={toggleMenu}></div>
+          <div className="absolute right-0 top-0 h-full w-80 bg-white border-l border-black">
             <div className="p-6 pt-20">
               <div className="space-y-6">
                 {navLinks.map((link) => (
@@ -261,7 +246,7 @@ const Navbar = () => {
                     key={link.href}
                     to={link.href}
                     onClick={toggleMenu}
-                    className="flex items-center space-x-3 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300 p-3 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                    className="flex items-center space-x-3 text-black hover:text-black p-3 rounded-lg hover:bg-gray-100"
                   >
                     <link.icon className="h-5 w-5" />
                     <span className="font-medium">{link.label}</span>
@@ -271,12 +256,12 @@ const Navbar = () => {
                 {!user && (
                   <div className="pt-6 border-t border-gray-200 dark:border-slate-700 space-y-3">
                     <Link to="/login" onClick={toggleMenu}>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full bg-white text-black border border-black">
                         Sign In
                       </Button>
                     </Link>
                     <Link to="/signup" onClick={toggleMenu}>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+                      <Button className="w-full bg-black text-white border border-white">
                         Get Started
                       </Button>
                     </Link>

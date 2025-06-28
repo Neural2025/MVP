@@ -64,6 +64,7 @@ export interface TestGenerationResponse {
 export interface AuthRequest {
   email: string;
   password: string;
+  team?: string;
 }
 
 export interface AuthResponse {
@@ -91,7 +92,7 @@ export const login = async (data: AuthRequest): Promise<AuthResponse> => {
   return response.data;
 };
 
-export const signup = async (data: AuthRequest & { name: string; role: string }): Promise<AuthResponse> => {
+export const signup = async (data: AuthRequest & { name: string; role: string; team?: string }): Promise<AuthResponse> => {
   const response = await api.post('/api/auth/signup', data);
   return response.data;
 };

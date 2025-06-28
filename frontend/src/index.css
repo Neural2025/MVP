@@ -4,69 +4,69 @@
 
 @layer base {
   :root {
-    /* Light Mode - Vibrant Purple/Pink Theme */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Black and White Only */
+    --background: 0 0% 100%; /* white */
+    --foreground: 0 0% 0%;   /* black */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%; /* Vibrant Purple */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 340 82% 52%; /* Vibrant Pink */
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 195 100% 50%; /* Vibrant Cyan */
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
-    --chart-1: 262 83% 58%; /* Purple */
-    --chart-2: 340 82% 52%; /* Pink */
-    --chart-3: 195 100% 50%; /* Cyan */
-    --chart-4: 120 100% 40%; /* Green */
-    --chart-5: 45 100% 50%; /* Orange */
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 30%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 0% 0%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 0%;
+    --chart-1: 0 0% 0%;
+    --chart-2: 0 0% 100%;
+    --chart-3: 0 0% 80%;
+    --chart-4: 0 0% 20%;
+    --chart-5: 0 0% 60%;
     --radius: 0.5rem;
   }
 
   .dark {
-    /* Dark Mode - Vibrant Emerald/Orange Theme */
-    --background: 240 10% 3.9%; /* Deep Dark Blue */
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 142 76% 36%; /* Vibrant Emerald */
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 3.7% 15.9%; /* Dark Gray */
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 12 76% 61%; /* Vibrant Orange */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142 76% 36%;
-    --chart-1: 142 76% 36%; /* Emerald */
-    --chart-2: 12 76% 61%; /* Orange */
-    --chart-3: 262 83% 58%; /* Purple */
-    --chart-4: 195 100% 50%; /* Cyan */
-    --chart-5: 340 82% 52%; /* Pink */
+    /* Black and White Only (Dark Mode) */
+    --background: 0 0% 0%;   /* black */
+    --foreground: 0 0% 100%; /* white */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 0%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 0% 100%;
+    --destructive-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 100%;
+    --chart-1: 0 0% 100%;
+    --chart-2: 0 0% 0%;
+    --chart-3: 0 0% 80%;
+    --chart-4: 0 0% 20%;
+    --chart-5: 0 0% 60%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-black;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-black;
   }
 }
 
@@ -76,36 +76,36 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-muted;
+  @apply bg-white;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded-md;
+  @apply bg-black rounded-md;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
+  @apply bg-black;
 }
 
 /* Code syntax highlighting */
 .syntax-keyword {
-  @apply text-blue-400 font-medium;
+  @apply text-black font-medium;
 }
 
 .syntax-string {
-  @apply text-green-400;
+  @apply text-black;
 }
 
 .syntax-comment {
-  @apply text-gray-500 italic;
+  @apply text-black italic;
 }
 
 .syntax-number {
-  @apply text-orange-400;
+  @apply text-black;
 }
 
 .syntax-boolean {
-  @apply text-purple-400;
+  @apply text-black;
 }
 
 /* Animations */
@@ -115,7 +115,7 @@
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes glow {
@@ -124,5 +124,5 @@
 }
 
 .animate-glow {
-  animation: glow 2s ease-in-out infinite;
+  animation: none;
 }

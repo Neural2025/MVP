@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./styles/animations.css";
 import Navbar from "@/components/Navbar";
 import Home from "./pages/Home";
+import CodeAnalysis from "./pages/CodeAnalysis";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";

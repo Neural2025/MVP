@@ -1503,7 +1503,13 @@ If no bugs are found, return an empty bugs array.
       }
 
       const sanitizedCode = Validator.validateCode(code);
-      const detectedLanguage = language || 'javascript';
+      // Always detect language if not provided
+      let detectedLanguage = language;
+      // Always detect language from code
+      const autoDetectedLanguage = deepseekService.detectProgrammingLanguage(sanitizedCode);
+      if (!detectedLanguage || detectedLanguage.toLowerCase() !== autoDetectedLanguage.toLowerCase()) {
+        detectedLanguage = autoDetectedLanguage;
+      }
 
       logger.info('Starting test execution report', {
         role,
@@ -1579,6 +1585,39 @@ If no bugs are found, return an empty bugs array.
           logger.warn('Failed to save test report to user history:', saveError.message);
         }
       }
+
+      // --- Auto-create bug reports for failed/error tests (tester only) ---
+      if (req.user && req.user.role === 'tester') {
+        const BugReport = require('../models/BugReport');
+        const failedTests = report.testCases.filter(tc => tc.status === 'FAILED' || tc.status === 'ERROR');
+        for (const test of failedTests) {
+          // Save to global BugReport collection
+          const bug = await BugReport.create({
+            title: `Test Failure: ${test.name}`,
+            description: test.message || 'Test case failed or errored',
+            severity: 'high',
+            status: 'open',
+            language: detectedLanguage,
+            source: 'test',
+            createdBy: req.user._id
+          });
+          // Also add to user's bugReports array
+          if (req.user && req.user.addBugReport) {
+            await req.user.addBugReport({
+              id: bug._id.toString(),
+              title: bug.title,
+              description: bug.description,
+              severity: bug.severity,
+              status: bug.status,
+              language: bug.language,
+              aiAnalysis: null,
+              createdAt: bug.createdAt,
+              updatedAt: bug.updatedAt
+            });
+          }
+        }
+      }
+      // --- End bug report creation ---
 
       logger.info('Test execution report completed', {
         totalTests: report.summary.totalTests,

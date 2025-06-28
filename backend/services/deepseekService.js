@@ -307,6 +307,11 @@ Return your response as a JSON object with this exact structure:
       ]
     };
 
+    // Force C++ detection if strong patterns found
+    if (/#include\s*<[^>]+>/i.test(code) || /int\s+main\s*\(/i.test(code)) {
+      return 'C++';
+    }
+
     let maxMatches = 0;
     let detectedLanguage = 'Code';
 

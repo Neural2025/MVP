@@ -6,7 +6,8 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: string; // Added role property
+  role: string;
+  team?: string | { _id: string; name: string }; // Added team property
 }
 
 interface AuthContextType {
@@ -14,7 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, role: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role: string, team?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -83,10 +84,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: string) => {
+  const signup = async (name: string, email: string, password: string, role: string, team?: string) => {
     try {
       setIsLoading(true);
-      const response = await apiSignup({ name, email, password, role });
+      const response = await apiSignup({ name, email, password, role, team });
 
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
@@ -101,6 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
     }
   };
+
 
   const logout = async () => {
     try {
