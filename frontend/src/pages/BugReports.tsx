@@ -157,28 +157,28 @@ const BugReports: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-100">
+      <div className="container mx-auto py-12">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-red-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-gradient">
+          <h1 className="text-5xl font-bold mb-4 text-black">
             Bug Reports
           </h1>
-          <p className="text-xl text-gray-300">Manage bug reports for your project</p>
+          <p className="text-xl text-gray-600">Manage bug reports for your project</p>
         </div>
 
         <Tabs defaultValue="reports" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-1 bg-white/10 backdrop-blur-lg">
-            <TabsTrigger value="reports" className="data-[state=active]:bg-red-600">
-              <FileText className="mr-2 h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-1 bg-white border border-gray-300">
+            <TabsTrigger value="reports" className="data-[state=active]:bg-gray-200">
+              <FileText className="mr-2 h-4 w-4 text-gray-600" />
               Bug Reports History
             </TabsTrigger>
           </TabsList>
           <TabsContent value="reports" className="space-y-6">
             {/* Bug Reports Filters */}
-            <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+            <Card className="bg-white border border-gray-300">
               <CardHeader>
-                <CardTitle>Filter Bug Reports</CardTitle>
+                <CardTitle className="text-black">Filter Bug Reports</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -186,11 +186,11 @@ const BugReports: React.FC = () => {
                     placeholder="Search by title or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-black/20 border-white/20 text-white"
+                    className="border border-gray-400"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[150px] bg-black/20 border-white/20 text-white">
+                <Select value={statusFilter} onValueChange={setStatusFilter} className="border border-gray-400">
+                  <SelectTrigger>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -201,8 +201,8 @@ const BugReports: React.FC = () => {
                     <SelectItem value="closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                  <SelectTrigger className="w-[150px] bg-black/20 border-white/20 text-white">
+                <Select value={severityFilter} onValueChange={setSeverityFilter} className="border border-gray-400">
+                  <SelectTrigger>
                     <SelectValue placeholder="Severity" />
                   </SelectTrigger>
                   <SelectContent>
@@ -220,25 +220,25 @@ const BugReports: React.FC = () => {
             <div className="space-y-4">
               {isLoadingReports ? (
                 <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
-                  <p className="text-gray-300">Loading bug reports...</p>
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-600" />
+                  <p className="text-gray-600">Loading bug reports...</p>
                 </div>
               ) : filteredReports.length > 0 ? (
                 filteredReports.map((report, index) => (
                   <Card
                     key={report.id || index}
-                    className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-colors"
+                    className="bg-white border border-gray-300 hover:bg-gray-200 transition-colors"
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-2">
+                          <h3 className="text-lg font-semibold text-black mb-2">
                             {report.title || 'Bug Report'}
                           </h3>
-                          <p className="text-gray-300 text-sm mb-2">
+                          <p className="text-gray-600 text-sm mb-2">
                             {report.description || 'No description provided.'}
                           </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
                             <span>
                               Created:{' '}
                               {report.createdAt
@@ -273,9 +273,9 @@ const BugReports: React.FC = () => {
                 ))
               ) : (
                 <div className="text-center py-12">
-                  <Bug className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No Bug Reports Found</h3>
-                  <p className="text-gray-300 mb-4">No bug reports have been created yet.</p>
+                  <Bug className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-black mb-2">No Bug Reports Found</h3>
+                  <p className="text-gray-600 mb-4">No bug reports have been created yet.</p>
                 </div>
               )}
             </div>
@@ -283,25 +283,25 @@ const BugReports: React.FC = () => {
         </Tabs>
 
         {/* Bug Report Creation Form */}
-        <Card className="bg-white/10 backdrop-blur-lg border-white/20 mt-8">
+        <Card className="bg-white border border-gray-300 mt-8">
           <CardHeader>
-            <CardTitle>Create New Bug Report</CardTitle>
+            <CardTitle className="text-black">Create New Bug Report</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-white mb-1">Title</label>
+                <label className="block text-black mb-1">Title</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Bug title"
-                  className="bg-black/20 border-white/20 text-white"
+                  className="border border-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-white mb-1">Language</label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                <label className="block text-black mb-1">Language</label>
+                <Select value={language} onValueChange={setLanguage} className="border border-gray-400">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
@@ -314,19 +314,19 @@ const BugReports: React.FC = () => {
                 </Select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-white mb-1">Description</label>
+                <label className="block text-black mb-1">Description</label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the bug..."
                   rows={3}
-                  className="bg-black/20 border-white/20 text-white"
+                  className="border border-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-white mb-1">Severity</label>
-                <Select value={severity} onValueChange={setSeverity}>
-                  <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                <label className="block text-black mb-1">Severity</label>
+                <Select value={severity} onValueChange={setSeverity} className="border border-gray-400">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select severity" />
                   </SelectTrigger>
                   <SelectContent>
@@ -338,9 +338,9 @@ const BugReports: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <label className="block text-white mb-1">Status</label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                <label className="block text-black mb-1">Status</label>
+                <Select value={status} onValueChange={setStatus} className="border border-gray-400">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -353,7 +353,7 @@ const BugReports: React.FC = () => {
               </div>
             </div>
             <Button
-              className="mt-4 bg-red-600 hover:bg-red-700"
+              className="mt-4 bg-black text-white"
               disabled={isSubmitting}
               onClick={async () => {
                 if (!title.trim() || !description.trim()) {

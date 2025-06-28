@@ -35,8 +35,7 @@ const Login = () => {
         to="/"
         className="absolute top-6 left-6 flex items-center gap-2 text-black hover:text-gray-700 transition-all duration-300"
       >
-        <ArrowLeft className="h-5 w-5" />
-        <span>Back to Home</span>
+        
       </Link>
 
       <div className="w-full max-w-md space-y-8">

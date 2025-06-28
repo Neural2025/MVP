@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Mail, Shield, CheckCircle, AlertCircle, User, Lock, ArrowLeft } from "lucide-react";
+import { Loader2, UserPlus, Mail, CheckCircle, AlertCircle, User, Lock, ArrowLeft } from "lucide-react";
 
 const Signup = () => {
   const { signup, isAuthenticated, isLoading } = useAuth();
@@ -114,32 +113,14 @@ const Signup = () => {
     }
     if (isCreatingTeam && !newTeam.trim()) {
       alert("Please enter a new team name");
-      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      let teamId = team;
-      if (isCreatingTeam && newTeam.trim()) {
-        // Create new team
-        const res = await fetch('/api/teams', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: newTeam.trim() })
-        });
-        const data = await res.json();
-        if (data && data._id) {
-          teamId = data._id;
-        } else {
-          alert('Failed to create team');
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      await signup(name, email, password, role, teamId);
+      await signup(name, email, password, role, isCreatingTeam ? newTeam : team);
     } catch (error) {
-      // Error is handled by the auth context
+      alert("Error creating account");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,8 +146,7 @@ const Signup = () => {
         <span>Back to Home</span>
       </Link>
 
-      <div className={`w-full max-w-md space-y-8 ${isPageLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
-        {/* Header */}
+      <div className={`w-full max-w-md space-y-8 ${isPageLoaded ? 'animate-fade-in' : 'opacity-0'}`}>        {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="relative">
@@ -330,10 +310,10 @@ const Signup = () => {
           <div className="text-center space-y-2">
             <h3 className="font-semibold text-sm">What you'll get</h3>
             <ul className="text-xs text-gray-600 space-y-1">
-              <li> AI-powered code analysis</li>
-              <li> Automated test generation</li>
-              <li> Multi-language support</li>
-              <li> Security vulnerability detection</li>
+              <li> AI-powered code analysis</li>
+              <li> Automated test generation</li>
+              <li> Multi-language support</li>
+              <li> Security vulnerability detection</li>
             </ul>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +106,12 @@ const ResultsDashboard = ({ analysisResults, testResults }: ResultsDashboardProp
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState("analysis");
   const [showFix, setShowFix] = useState(false);
+
+  useEffect(() => {
+    if (analysisResults && analysisResults.fixedCode) {
+      setShowFix(true);
+    }
+  }, [analysisResults]);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) => ({

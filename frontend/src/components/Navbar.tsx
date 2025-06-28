@@ -129,21 +129,13 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`navbar fixed top-0 left-0 right-0 z-50 bg-white text-black`}>
+      <nav className={`navbar bg-white text-black`}>
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
+            {/* Logo - Ensure it's rendered only once */}
             <Link to="/" className="nav-item flex items-center space-x-3 min-w-0 flex-shrink-0">
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-all duration-500 animate-pulse"></div>
-                <Brain className="h-7 w-7 lg:h-8 lg:w-8 text-purple-400 group-hover:text-purple-300 transition-all duration-300 relative z-10 animate-float" />
-              </div>
-              <span className="text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-gradient hidden sm:block">
-                AI QA Assistant
-              </span>
-              <span className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-gradient sm:hidden">
-                AIQA
-              </span>
+              <img src="/neuralbi-logo.png" alt="NeuralBI Logo" className="h-9 lg:h-11 w-auto align-middle mr-2" />
+              <span className="text-2xl lg:text-3xl font-bold text-black" style={{letterSpacing: '1px'}}>NeuralBI</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -220,7 +212,7 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button - Ensure it's rendered only once */}
               <Button
                 variant="ghost"
                 size="sm"

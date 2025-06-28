@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Code,
   Upload,
@@ -23,9 +22,8 @@ import {
   Shield
 } from "lucide-react";
 import { toast } from "sonner";
-import { analyzeCode } from "@/lib/api";
+import { analyzeCode } from "@/lib/api"
 import ResultsDashboard from "@/components/ResultsDashboard";
-import Navbar from "@/components/Navbar";
 
 const Index = () => {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -402,117 +400,6 @@ const Index = () => {
   // Main App UI
   return (
     <div className={`min-h-screen transition-all duration-300 ${isDarkMode ? 'dark bg-slate-900' : 'bg-gray-50'}`}>
-      {/* Navbar */}
-      <Navbar />
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full">
-        <div className="backdrop-blur-lg bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 border-b border-purple-700/30 shadow-xl">
-          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <Brain className="h-8 w-8 text-indigo-600 dark:text-purple-300" />
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-purple-300 dark:to-pink-300">
-                AI QA Assistant
-              </span>
-            </div>
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="rounded-full ml-4"
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-indigo-600" />}
-            </Button>
-            {/* User Role/Logout */}
-            <div className="flex items-center gap-3 ml-4">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 text-white">
-                <span className="text-2xl">
-                  {selectedRole === 'developer' ? '👨‍💻' : selectedRole === 'tester' ? '🧪' : '📊'}
-                </span>
-                <span className="text-sm font-medium capitalize">{selectedRole}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
-                className="text-red-600 hover:text-red-700"
-                aria-label="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-        {/* Language Selector below the main header, always visible, with clear background for both modes */}
-        <div className="w-full px-0 border-t border-purple-700/20">
-          <div className="container mx-auto px-6 py-3 flex justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-              <SelectTrigger className="w-48 bg-white dark:bg-slate-800 border border-purple-400/40 dark:border-purple-900/40 shadow">
-                <SelectValue placeholder="Select Language" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-slate-900 border border-purple-500/30 dark:border-purple-800/50">
-                <SelectItem value="javascript">JavaScript</SelectItem>
-                <SelectItem value="typescript">TypeScript</SelectItem>
-                <SelectItem value="python">Python</SelectItem>
-                <SelectItem value="java">Java</SelectItem>
-                <SelectItem value="cpp">C++</SelectItem>
-                <SelectItem value="c">C</SelectItem>
-                <SelectItem value="csharp">C#</SelectItem>
-                <SelectItem value="php">PHP</SelectItem>
-                <SelectItem value="ruby">Ruby</SelectItem>
-                <SelectItem value="go">Go</SelectItem>
-                <SelectItem value="rust">Rust</SelectItem>
-                <SelectItem value="swift">Swift</SelectItem>
-                <SelectItem value="kotlin">Kotlin</SelectItem>
-                <SelectItem value="scala">Scala</SelectItem>
-                <SelectItem value="dart">Dart</SelectItem>
-                <SelectItem value="r">R</SelectItem>
-                <SelectItem value="perl">Perl</SelectItem>
-                <SelectItem value="lua">Lua</SelectItem>
-                <SelectItem value="haskell">Haskell</SelectItem>
-                <SelectItem value="erlang">Erlang</SelectItem>
-                <SelectItem value="elixir">Elixir</SelectItem>
-                <SelectItem value="clojure">Clojure</SelectItem>
-                <SelectItem value="fsharp">F#</SelectItem>
-                <SelectItem value="vbnet">VB.NET</SelectItem>
-                <SelectItem value="objective-c">Objective-C</SelectItem>
-                <SelectItem value="shell">Shell</SelectItem>
-                <SelectItem value="bash">Bash</SelectItem>
-                <SelectItem value="powershell">PowerShell</SelectItem>
-                <SelectItem value="sql">SQL</SelectItem>
-                <SelectItem value="html">HTML</SelectItem>
-                <SelectItem value="css">CSS</SelectItem>
-                <SelectItem value="sass">SASS/SCSS</SelectItem>
-                <SelectItem value="less">LESS</SelectItem>
-                <SelectItem value="xml">XML</SelectItem>
-                <SelectItem value="json">JSON</SelectItem>
-                <SelectItem value="yaml">YAML</SelectItem>
-                <SelectItem value="toml">TOML</SelectItem>
-                <SelectItem value="dockerfile">Dockerfile</SelectItem>
-                <SelectItem value="makefile">Makefile</SelectItem>
-                <SelectItem value="cmake">CMake</SelectItem>
-                <SelectItem value="assembly">Assembly</SelectItem>
-                <SelectItem value="cobol">COBOL</SelectItem>
-                <SelectItem value="fortran">Fortran</SelectItem>
-                <SelectItem value="pascal">Pascal</SelectItem>
-                <SelectItem value="delphi">Delphi</SelectItem>
-                <SelectItem value="matlab">MATLAB</SelectItem>
-                <SelectItem value="octave">Octave</SelectItem>
-                <SelectItem value="julia">Julia</SelectItem>
-                <SelectItem value="nim">Nim</SelectItem>
-                <SelectItem value="crystal">Crystal</SelectItem>
-                <SelectItem value="zig">Zig</SelectItem>
-                <SelectItem value="v">V</SelectItem>
-                <SelectItem value="solidity">Solidity</SelectItem>
-                <SelectItem value="vyper">Vyper</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </header>
 
       <div className="container mx-auto px-6 py-8">
         {/* Input Section */}

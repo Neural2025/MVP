@@ -33,16 +33,16 @@ const TestSuites: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Test Suites</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black">Test Suites</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testSuiteOptions.map((option) => (
-          <Card key={option.id} className="hover:shadow-lg transition-shadow">
+          <Card key={option.id} className="hover:shadow-lg transition-shadow bg-white border border-gray-300">
             <CardHeader>
-              <option.icon className="w-8 h-8 mb-2 text-primary" />
-              <CardTitle>{option.label}</CardTitle>
+              <option.icon className="w-8 h-8 mb-2 text-black" />
+              <CardTitle className="text-black">{option.label}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" onClick={() => window.location.href = `/test-suites/${option.id}`}>
+              <Button variant="outline" onClick={() => window.location.href = `/test-suites/${option.id}`} className="bg-black text-white">
                 Start {option.label}
               </Button>
             </CardContent>

@@ -45,72 +45,73 @@ const CodeAnalysis = () => {
 
   return (
     <div className="container mx-auto py-12">
-      <Card className="mb-8">
+      <Card className="mb-8 bg-white border border-gray-300">
         <CardHeader>
-          <CardTitle>Code Analysis</CardTitle>
+          <CardTitle className="text-black">Code Analysis</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block mb-1 font-medium">Programming Language</label>
+              <label className="block mb-1 font-medium text-black">Programming Language</label>
               <Input
                 type="text"
                 value={language}
                 onChange={e => setLanguage(e.target.value)}
                 placeholder="e.g. javascript, python, java"
                 required
+                className="border border-gray-400"
               />
             </div>
             <div>
-              <label className="block mb-1 font-medium">Purpose (optional)</label>
+              <label className="block mb-1 font-medium text-black">Purpose (optional)</label>
               <Input
                 type="text"
                 value={purpose}
                 onChange={e => setPurpose(e.target.value)}
                 placeholder="Describe the code's purpose"
+                className="border border-gray-400"
               />
             </div>
             <div>
-              <label className="block mb-1 font-medium">Paste your code</label>
+              <label className="block mb-1 font-medium text-black">Paste your code</label>
               <Textarea
                 value={code}
                 onChange={e => setCode(e.target.value)}
                 rows={10}
                 placeholder="Paste your code here..."
                 required
+                className="border border-gray-400"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-black text-white" disabled={loading}>
               {loading ? 'Analyzing...' : 'Analyze Code'}
             </Button>
           </form>
-          {error && <div className="text-red-500 mt-4">{error}</div>}
+          {error && <div className="text-black mt-4">{error}</div>}
           {result && (
             <div className="mt-8">
-              <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+              <h3 className="text-xl font-bold mb-4 text-black">Analysis Result</h3>
               <div className="w-full">
-                {/* Errors Section */}
                 {result.errors && (
                   <div className="mb-6">
-                    <h4 className="text-lg font-semibold mb-2 text-red-600">Errors</h4>
-                    <pre className="bg-red-100 text-red-700 p-3 rounded whitespace-pre-wrap text-sm max-h-60 overflow-x-auto">
+                    <h4 className="text-lg font-semibold mb-2 text-black">Errors</h4>
+                    <pre className="bg-gray-100 text-black p-3 rounded whitespace-pre-wrap text-sm max-h-60 overflow-x-auto">
                       {Array.isArray(result.errors) ? result.errors.join('\n') : JSON.stringify(result.errors, null, 2)}
                     </pre>
                   </div>
                 )}
-                {/* Recommendations Section with Apply Fix button */}
                 {result.recommendations && (
                   <div className="mb-6 flex items-start gap-4">
                     <div className="flex-1">
-                      <h4 className="text-lg font-semibold mb-2 text-green-700">Recommendations</h4>
-                      <pre className="bg-green-50 text-green-900 p-3 rounded whitespace-pre-wrap text-sm max-h-60 overflow-x-auto">
+                      <h4 className="text-lg font-semibold mb-2 text-black">Recommendations</h4>
+                      <pre className="bg-gray-100 text-black p-3 rounded whitespace-pre-wrap text-sm max-h-60 overflow-x-auto">
                         {Array.isArray(result.recommendations) ? result.recommendations.join('\n') : JSON.stringify(result.recommendations, null, 2)}
                       </pre>
                     </div>
                     <div className="pt-2">
                       <Button
                         type="button"
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        className="bg-black text-white"
                         disabled={!corrections || !corrections.fixedCode}
                         onClick={() => setActiveTab('applyfix')}
                       >
@@ -119,12 +120,11 @@ const CodeAnalysis = () => {
                     </div>
                   </div>
                 )}
-                {/* Corrected Code (shown only when Apply Fix is clicked) */}
                 {activeTab === 'applyfix' && (
                   corrections && corrections.fixedCode ? (
                     <div className="mb-4">
-                      <h4 className="text-lg font-semibold mb-2 text-purple-700">Corrected Code</h4>
-                      <pre className="bg-gray-900 text-green-300 p-4 rounded mt-2 overflow-x-auto whitespace-pre-wrap text-sm max-h-96">
+                      <h4 className="text-lg font-semibold mb-2 text-black">Corrected Code</h4>
+                      <pre className="bg-gray-900 text-white p-4 rounded mt-2 overflow-x-auto whitespace-pre-wrap text-sm max-h-96">
                         {corrections.fixedCode}
                       </pre>
                     </div>
