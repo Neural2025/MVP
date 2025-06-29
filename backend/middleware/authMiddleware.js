@@ -10,7 +10,13 @@ exports.authenticate = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const user = await User.findById(decoded.id);
+    console.log('[authMiddleware] Decoded JWT:', decoded);
+    // Accept either decoded.userId or decoded.id for compatibility
+    const userId = decoded.userId || decoded.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token payload: missing userId/id' });
+    }
+    const user = await User.findById(userId);
     if (!user) return res.status(401).json({ error: 'Invalid user' });
     req.user = user;
     next();

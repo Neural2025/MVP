@@ -17,6 +17,11 @@ import TestSuites from "./pages/TestSuites";
 import TestSuiteRunner from "./pages/TestSuiteRunner";
 import BugReports from "./pages/BugReports";
 import NotFound from "./pages/NotFound";
+import AdminDashboardPage from "./pages/admin-dashboard";
+import TeamPage from "./pages/team";
+import SettingsPage from "./pages/settings";
+import AnalyticsPage from "./pages/analytics";
+import MembersPage from "./pages/members";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -33,10 +38,15 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
                   <Route path="/code-analysis" element={<Index />} />
-                                    <Route path="/test-suites" element={<TestSuites />} />
+                  <Route path="/test-suites" element={<TestSuites />} />
                   <Route path="/test-suites/:suiteType" element={<TestSuiteRunner />} />
                   <Route path="/bug-reports" element={<BugReports />} />
+                  <Route path="/team" element={<TeamPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/members" element={<MembersPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="*" element={<NotFound />} />

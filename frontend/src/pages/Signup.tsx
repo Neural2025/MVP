@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, UserPlus, Mail, CheckCircle, AlertCircle, User, Lock, ArrowLeft } from "lucide-react";
 
 const Signup = () => {
@@ -13,11 +12,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("");
-  const [team, setTeam] = useState("");
-  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [newTeam, setNewTeam] = useState("");
-  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
 
@@ -25,13 +20,6 @@ const Signup = () => {
     const timer = setTimeout(() => {
       setIsPageLoaded(true);
     }, 100);
-    // Fetch teams from backend
-    fetch('/api/teams', {
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .then(res => res.json())
-      .then(data => setTeams(Array.isArray(data) ? data : []))
-      .catch(() => setTeams([]));
     return () => clearTimeout(timer);
   }, []);
   const [emailValidation, setEmailValidation] = useState<{
@@ -89,6 +77,9 @@ const Signup = () => {
     return () => clearTimeout(timeoutId);
   };
 
+  const [teamCode, setTeamCode] = useState<string | null>(null);
+  const [redirectToDashboard, setRedirectToDashboard] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,34 +88,66 @@ const Signup = () => {
       return;
     }
 
-    if (!role) {
-      alert("Please select your role");
-      return;
-    }
-
     if (!emailValidation.isValid) {
       alert("Please enter a valid email address");
       return;
     }
 
-    if (!isCreatingTeam && !team) {
-      alert("Please select a team or create a new one");
-      return;
-    }
-    if (isCreatingTeam && !newTeam.trim()) {
+    if (!newTeam.trim()) {
       alert("Please enter a new team name");
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await signup(name, email, password, role, isCreatingTeam ? newTeam : team);
-    } catch (error) {
-      alert("Error creating account");
+      // Call the backend API for admin signup
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          teamName: newTeam
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Signup failed");
+      }
+      setTeamCode(data.team.code);
+      // Optionally store token/user for immediate login
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setTimeout(() => setRedirectToDashboard(true), 2000);
+    } catch (error: any) {
+      alert(error.message || "Signup failed");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (redirectToDashboard) {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+
+  if (teamCode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100 text-gray-900 p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-200 max-w-md w-full text-center">
+          <h2 className="text-2xl font-bold mb-4 text-blue-600">Team Created!</h2>
+          <p className="mb-2">Your team code:</p>
+          <div className="text-3xl font-mono font-bold bg-blue-50 px-4 py-2 rounded-lg inline-block mb-4 border border-blue-200">
+            {teamCode}
+          </div>
+          <p className="mb-4">Share this code with your team members so they can join your team.</p>
+          <p className="text-gray-500 text-sm">You will be redirected to the Admin Dashboard shortly...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-100 text-gray-900 p-4 relative overflow-hidden">
@@ -223,23 +246,18 @@ const Signup = () => {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="role" className="text-sm font-medium">
-                  Role
+                <label htmlFor="newTeam" className="text-sm font-medium">
+                  Team Name
                 </label>
-                <Select
-                  value={role}
-                  onValueChange={setRole}
+                <Input
+                  id="newTeam"
+                  type="text"
+                  placeholder="Enter your team name"
+                  value={newTeam}
+                  onChange={(e) => setNewTeam(e.target.value)}
                   required
-                >
-                  <SelectTrigger id="role" className="h-11">
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="developer">Developer</SelectItem>
-                    <SelectItem value="tester">Tester</SelectItem>
-                    <SelectItem value="po">Product Owner</SelectItem>
-                  </SelectContent>
-                </Select>
+                  className="h-11 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+                />
               </div>
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium flex items-center gap-2">

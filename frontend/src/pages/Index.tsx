@@ -14,15 +14,10 @@ import {
   Github,
   Brain,
   Loader2,
-  Moon,
-  Sun,
-  LogOut,
   Bug,
   Zap,
-  Shield
 } from "lucide-react";
 import { toast } from "sonner";
-import { analyzeCode } from "@/lib/api"
 import ResultsDashboard from "@/components/ResultsDashboard";
 
 const Index = () => {

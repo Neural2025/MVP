@@ -135,7 +135,7 @@ const Navbar = () => {
             {/* Logo - Ensure it's rendered only once */}
             <Link to="/" className="nav-item flex items-center space-x-3 min-w-0 flex-shrink-0">
               <img src="/neuralbi-logo.png" alt="NeuralBI Logo" className="h-9 lg:h-11 w-auto align-middle mr-2" />
-              <span className="text-2xl lg:text-3xl font-bold text-black" style={{letterSpacing: '1px'}}>NeuralBI</span>
+              <span className="text-2xl lg:text-3xl font-bold text-black" style={{letterSpacing: '1px'}}></span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -192,23 +192,38 @@ const Navbar = () => {
                 </DropdownMenu>
               ) : (
                 <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
-                  <Link to="/login">
+                  {/* Only show Sign In/Get Started if not logged in */}
+                  {!user && (
+                    <>
+                      <Link to="/login">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="nav-item text-xs lg:text-sm px-2 lg:px-3 bg-black text-white border border-black"
+                        >
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link to="/signup">
+                        <Button
+                          size="sm"
+                          className="nav-item bg-black text-white border border-white text-xs lg:text-sm px-2 lg:px-3"
+                        >
+                          Get Started
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                  {/* If logged in, show Logout */}
+                  {user && (
                     <Button
-                      variant="ghost"
+                      onClick={handleLogout}
                       size="sm"
-                      className="nav-item text-xs lg:text-sm px-2 lg:px-3 bg-black text-white border border-black"
+                      className="nav-item bg-red-500 text-white border border-white text-xs lg:text-sm px-2 lg:px-3"
                     >
-                      Sign In
+                      Logout
                     </Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button
-                      size="sm"
-                      className="nav-item bg-black text-white border border-white text-xs lg:text-sm px-2 lg:px-3"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
+                  )}
                 </div>
               )}
 

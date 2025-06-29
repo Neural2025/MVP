@@ -9,7 +9,10 @@ router.use(authenticate);
 
 router.post('/', teamController.createTeam); // Create team
 router.get('/', teamController.getTeams); // Get teams for user
-router.post('/add-member', teamController.addMember); // Add member
-router.post('/remove-member', teamController.removeMember); // Remove member
+router.get('/:teamId', teamController.getTeamById); // Get team by ID
+router.post('/:teamId/invite', teamController.inviteMember); // Invite member (with OTP/team code)
+router.patch('/:teamId', teamController.updateTeam); // Update team info (e.g., name)
+router.patch('/:teamId/role', teamController.changeMemberRole); // Change member role
+router.delete('/:teamId/member/:userId', teamController.removeMember); // Remove member
 
 module.exports = router;

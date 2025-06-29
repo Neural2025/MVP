@@ -4,12 +4,20 @@ const logger = require('../utils/logger');
 const emailValidationService = require('../services/emailValidationService');
 
 // Register new user
+const Team = require('../models/Team');
+const crypto = require('crypto');
+
 const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    // Debug: log incoming signup request (do NOT log password)
+    logger.info('[Signup] Request body:', { name: req.body.name, email: req.body.email, teamName: req.body.teamName });
+
+    const { name, email, password, teamName } = req.body;
+    // Restrict to admin only
+    const role = 'admin';
 
     // Validate input
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password || !teamName) {
       return res.status(400).json({
         success: false,
         error: 'Name, email, password, and role are required'
@@ -23,17 +31,13 @@ const signup = async (req, res) => {
       });
     }
 
-    // Validate role
-    const validRoles = ['developer', 'tester', 'product_manager'];
-    if (role && !validRoles.includes(role)) {
+    // Only allow admin role here
+    if (role !== 'admin') {
       return res.status(400).json({
         success: false,
-        error: 'Invalid role. Must be developer, tester, or product_manager'
+        error: 'Only admin signup is allowed.'
       });
     }
-
-    // Default role if not provided
-    const userRole = role || 'developer';
 
     // Validate email format first
     if (!emailValidationService.isValidFormat(email)) {
@@ -54,6 +58,7 @@ const signup = async (req, res) => {
 
     // Check if user already exists
     const existingUser = await User.findByEmail(email);
+    logger.info('[Signup] Existing user:', existingUser);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -61,36 +66,54 @@ const signup = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new admin user
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
-      role: userRole,
+      role: 'admin',
       emailVerified: emailValidation.isValid
     });
-
     await user.save();
+
+    // Generate unique team code
+    let teamCode;
+    let teamExists = true;
+    while (teamExists) {
+      teamCode = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6-char code
+      teamExists = await Team.findOne({ code: teamCode });
+    }
+    logger.info('[Signup] Generated team code:', teamCode);
+
+    // Create new team
+    const team = new Team({
+      name: teamName,
+      code: teamCode,
+      owner: user._id,
+      members: [user._id]
+    });
+    await team.save();
+    logger.info('[Signup] New team created:', team.name);
 
     // Generate token
     const token = generateToken(user._id);
-
-    // Update last login
     await user.updateLastLogin();
-
-    logger.info(`New user registered: ${user.email}`);
+    logger.info(`New admin registered: ${user.email}`);
 
     res.status(201).json({
       success: true,
-      message: 'User created successfully',
+      message: 'Admin and team created successfully',
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        analysisCount: user.analysisCount,
-        testGenerationCount: user.testGenerationCount
+        role: user.role
+      },
+      team: {
+        id: team._id,
+        name: team.name,
+        code: team.code
       }
     });
   } catch (error) {

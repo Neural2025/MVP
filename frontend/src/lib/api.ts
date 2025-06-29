@@ -28,9 +28,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // TEMP: Do not auto-logout or redirect; just log for debugging
+      console.error('[api.ts] 401 error:', error);
+      // localStorage.removeItem('authToken');
+      // localStorage.removeItem('user');
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }

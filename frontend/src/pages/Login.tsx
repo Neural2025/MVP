@@ -3,18 +3,26 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Code, Sparkles, ArrowLeft, Mail, Lock } from "lucide-react";
+import { Loader2, Code, Sparkles, Mail, Lock } from "lucide-react";
 
 const Login = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [teamCode, setTeamCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (isAuthenticated) {
+  const { user } = useAuth();
+  if (isAuthenticated && user) {
+    if (user.role === "admin") return <Navigate to="/admin-dashboard" replace />;
+    if (["po", "product_owner", "productowner", "product manager", "product_manager", "pm", "owner", "manager"].includes(user.role?.toLowerCase())) return <Navigate to="/dashboard" replace />;
+    if (["tester", "test", "qa"].includes(user.role?.toLowerCase())) return <Navigate to="/test-suites" replace />;
+    if (["developer", "dev"].includes(user.role?.toLowerCase())) return <Navigate to="/code-analysis" replace />;
     return <Navigate to="/" replace />;
   }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +67,7 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Sign in</CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Enter your email and password to access your account
+              Enter your email, password, and team code to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,6 +98,21 @@ const Login = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11 bg-white border-gray-300 text-black placeholder:text-gray-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="teamCode" className="text-sm font-medium flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Team Code
+                </label>
+                <Input
+                  id="teamCode"
+                  type="text"
+                  placeholder="Enter your team code"
+                  value={teamCode}
+                  onChange={(e) => setTeamCode(e.target.value)}
                   required
                   className="h-11 bg-white border-gray-300 text-black placeholder:text-gray-500"
                 />
